@@ -88,14 +88,19 @@ namespace Neo.Plugins
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-            try
+            var stack = new JArray();
+            foreach (var item in appExec.Stack)
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                try
+                {
+                    stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                }
+                catch (Exception ex)
+                {
+                    stack.Add("error: " + ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                trigger["exception"] = ex.Message;
-            }
+            trigger["stack"] = stack;
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
                 JObject notification = new JObject();
@@ -131,14 +136,19 @@ namespace Neo.Plugins
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-                    try
+                    var stack = new JArray();
+                    foreach (var item in appExec.Stack)
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                        try
+                        {
+                            stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                        }
+                        catch (Exception ex)
+                        {
+                            stack.Add("error: " + ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        trigger["exception"] = ex.Message;
-                    }
+                    trigger["stack"] = stack;
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
                         JObject notification = new JObject();

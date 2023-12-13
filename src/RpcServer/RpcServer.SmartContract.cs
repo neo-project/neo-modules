@@ -93,14 +93,19 @@ namespace Neo.Plugins
                         ["storagechanges"] = ToJson(session.Engine.Snapshot.GetChangeSet())
                     };
                 }
-                try
+                var stack = new JArray();
+                foreach (var item in session.Engine.ResultStack)
                 {
-                    json["stack"] = new JArray(session.Engine.ResultStack.Select(p => ToJson(p, session)));
+                    try
+                    {
+                        stack.Add(ToJson(item, session));
+                    }
+                    catch (Exception ex)
+                    {
+                        stack.Add("error: " + ex.Message);
+                    }
                 }
-                catch (InvalidOperationException)
-                {
-                    json["stack"] = "error: invalid operation";
-                }
+                json["stack"] = stack;
                 if (session.Engine.State != VMState.FAULT)
                 {
                     ProcessInvokeWithWallet(json, signers);
