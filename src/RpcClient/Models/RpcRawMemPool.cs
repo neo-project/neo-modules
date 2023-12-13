@@ -24,11 +24,12 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["height"] = Height;
-            json["verified"] = new JArray(Verified.Select(p => (JToken)p.ToString()));
-            json["unverified"] = new JArray(UnVerified.Select(p => (JToken)p.ToString()));
-            return json;
+            return new JObject
+            {
+                ["height"] = Height,
+                ["verified"] = new JArray(Verified.Select(p => (JToken)p.ToString())),
+                ["unverified"] = new JArray(UnVerified.Select(p => (JToken)p.ToString()))
+            };
         }
 
         public static RpcRawMemPool FromJson(JObject json)

@@ -27,7 +27,7 @@ namespace Neo.Cryptography.MPTTrie
             if (key.Length == 0) throw new InvalidOperationException(nameof(NewExtension));
             var n = new Node
             {
-                type = NodeType.ExtensionNode,
+                _type = NodeType.ExtensionNode,
                 Key = key,
                 Next = next,
                 Reference = 1,

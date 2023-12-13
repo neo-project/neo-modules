@@ -11,7 +11,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
 {
     class TestSnapshot : ISnapshot
     {
-        public Dictionary<byte[], byte[]> store = new Dictionary<byte[], byte[]>(ByteArrayEqualityComparer.Default);
+        public readonly Dictionary<byte[], byte[]> Store = new Dictionary<byte[], byte[]>(ByteArrayEqualityComparer.Default);
 
         private byte[] StoreKey(byte[] key)
         {
@@ -20,12 +20,12 @@ namespace Neo.Cryptography.MPTTrie.Tests
 
         public void Put(byte[] key, byte[] value)
         {
-            store[key] = value;
+            Store[key] = value;
         }
 
         public void Delete(byte[] key)
         {
-            store.Remove(StoreKey(key));
+            Store.Remove(StoreKey(key));
         }
 
         public void Commit() { throw new NotImplementedException(); }
@@ -36,14 +36,14 @@ namespace Neo.Cryptography.MPTTrie.Tests
 
         public byte[] TryGet(byte[] key)
         {
-            var result = store.TryGetValue(StoreKey(key), out byte[] value);
+            var result = Store.TryGetValue(StoreKey(key), out byte[] value);
             if (result) return value;
             return null;
         }
 
         public void Dispose() { throw new System.NotImplementedException(); }
 
-        public int Size => store.Count;
+        public int Size => Store.Count;
     }
 
     [TestClass]

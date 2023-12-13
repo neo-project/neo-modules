@@ -47,7 +47,7 @@ namespace Neo.Network.RPC.Models
 
     public class RpcNep17Transfer
     {
-        public ulong TimestampMS { get; set; }
+        public ulong TimestampMs { get; set; }
 
         public UInt160 AssetHash { get; set; }
 
@@ -63,22 +63,23 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new();
-            json["timestamp"] = TimestampMS;
-            json["assethash"] = AssetHash.ToString();
-            json["transferaddress"] = UserScriptHash?.ToAddress(protocolSettings.AddressVersion);
-            json["amount"] = Amount.ToString();
-            json["blockindex"] = BlockIndex;
-            json["transfernotifyindex"] = TransferNotifyIndex;
-            json["txhash"] = TxHash.ToString();
-            return json;
+            return new JObject
+            {
+                ["timestamp"] = TimestampMs,
+                ["assethash"] = AssetHash.ToString(),
+                ["transferaddress"] = UserScriptHash?.ToAddress(protocolSettings.AddressVersion),
+                ["amount"] = Amount.ToString(),
+                ["blockindex"] = BlockIndex,
+                ["transfernotifyindex"] = TransferNotifyIndex,
+                ["txhash"] = TxHash.ToString()
+            };
         }
 
         public static RpcNep17Transfer FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcNep17Transfer
             {
-                TimestampMS = (ulong)json["timestamp"].AsNumber(),
+                TimestampMs = (ulong)json["timestamp"].AsNumber(),
                 AssetHash = json["assethash"].ToScriptHash(protocolSettings),
                 UserScriptHash = json["transferaddress"]?.ToScriptHash(protocolSettings),
                 Amount = BigInteger.Parse(json["amount"].AsString()),

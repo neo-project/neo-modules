@@ -310,7 +310,7 @@ namespace Neo.Plugins.Trackers.NEP_11
         private void AddNep11Transfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime, JArray parentJArray)
         {
             var transferPairs = QueryTransfers<Nep11TransferKey, TokenTransfer>(dbPrefix, userScriptHash, startTime, endTime).Take((int)_maxResults).ToList();
-            foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
+            foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMs))
             {
                 JObject transfer = ToJson(key, value);
                 transfer["tokenid"] = key.Token.GetSpan().ToHexString();

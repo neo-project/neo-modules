@@ -34,8 +34,7 @@ namespace Neo.Cryptography.MPTTrie
                     break;
                 case NodeType.HashNode:
                     {
-                        var newNode = cache.Resolve(node.Hash);
-                        if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt seek");
+                        var newNode = _cache.Resolve(node.Hash) ?? throw new InvalidOperationException("Internal error, can't resolve hash when mpt seek");
                         node = newNode;
                         return Seek(ref node, path, out start);
                     }
@@ -84,7 +83,7 @@ namespace Neo.Cryptography.MPTTrie
             }
             if (path.Length > Node.MaxKeyLength || from.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit");
-            path = Seek(ref root, path, out Node start).ToArray();
+            path = Seek(ref _root, path, out Node start).ToArray();
             if (from.Length > 0)
             {
                 for (int i = 0; i < from.Length && i < path.Length; i++)
@@ -120,8 +119,7 @@ namespace Neo.Cryptography.MPTTrie
                     break;
                 case NodeType.HashNode:
                     {
-                        var newNode = cache.Resolve(node.Hash);
-                        if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt find");
+                        var newNode = _cache.Resolve(node.Hash) ?? throw new InvalidOperationException("Internal error, can't resolve hash when mpt find");
                         node = newNode;
                         foreach (var item in Travers(node, path, from, offset))
                             yield return item;

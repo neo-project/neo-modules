@@ -214,7 +214,7 @@ namespace Neo.Plugins.Trackers.NEP_17
         private void AddNep17Transfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime, JArray parentJArray)
         {
             var transferPairs = QueryTransfers<Nep17TransferKey, TokenTransfer>(dbPrefix, userScriptHash, startTime, endTime).Take((int)_maxResults).ToList();
-            foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
+            foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMs))
             {
                 parentJArray.Add(ToJson(key, value));
             }

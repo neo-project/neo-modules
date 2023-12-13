@@ -1,3 +1,4 @@
+using System;
 using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
@@ -9,7 +10,7 @@ namespace Neo.Network.RPC.Tests
 {
     internal static class TestUtils
     {
-        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JToken.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson((JObject)p)).ToList();
+        public static readonly List<RpcTestCase> RpcTestCases = ((JArray)JToken.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson((JObject)p)).ToList();
 
         public static Block GetBlock(int txCount)
         {
@@ -22,8 +23,8 @@ namespace Neo.Network.RPC.Tests
                     NextConsensus = UInt160.Zero,
                     Witness = new Witness
                     {
-                        InvocationScript = new byte[0],
-                        VerificationScript = new byte[0]
+                        InvocationScript = Array.Empty<byte>(),
+                        VerificationScript = Array.Empty<byte>()
                     }
                 },
                 Transactions = Enumerable.Range(0, txCount).Select(p => GetTransaction()).ToArray()
@@ -41,13 +42,13 @@ namespace Neo.Network.RPC.Tests
             {
                 Script = new byte[1],
                 Signers = new Signer[] { new Signer { Account = UInt160.Zero } },
-                Attributes = new TransactionAttribute[0],
+                Attributes = Array.Empty<TransactionAttribute>(),
                 Witnesses = new Witness[]
                 {
                     new Witness
                     {
-                        InvocationScript = new byte[0],
-                        VerificationScript = new byte[0]
+                        InvocationScript = Array.Empty<byte>(),
+                        VerificationScript = Array.Empty<byte>()
                     }
                 }
             };

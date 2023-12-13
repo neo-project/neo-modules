@@ -18,28 +18,28 @@ namespace Neo.Plugins.Storage
 {
     internal class Store : IStore
     {
-        private readonly RocksDb db;
+        private readonly RocksDb _db;
 
         public Store(string path)
         {
-            db = RocksDb.Open(Options.Default, Path.GetFullPath(path));
+            _db = RocksDb.Open(Options.Default, Path.GetFullPath(path));
         }
 
         public void Dispose()
         {
-            db.Dispose();
+            _db.Dispose();
         }
 
         public ISnapshot GetSnapshot()
         {
-            return new Snapshot(db);
+            return new Snapshot(_db);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
         {
             if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
 
-            using var it = db.NewIterator();
+            using var it = _db.NewIterator();
             if (direction == SeekDirection.Forward)
                 for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
                     yield return (it.Key(), it.Value());
@@ -50,27 +50,27 @@ namespace Neo.Plugins.Storage
 
         public bool Contains(byte[] key)
         {
-            return db.Get(key, Array.Empty<byte>(), 0, 0) >= 0;
+            return _db.Get(key, Array.Empty<byte>(), 0, 0) >= 0;
         }
 
         public byte[] TryGet(byte[] key)
         {
-            return db.Get(key);
+            return _db.Get(key);
         }
 
         public void Delete(byte[] key)
         {
-            db.Remove(key);
+            _db.Remove(key);
         }
 
         public void Put(byte[] key, byte[] value)
         {
-            db.Put(key, value);
+            _db.Put(key, value);
         }
 
         public void PutSync(byte[] key, byte[] value)
         {
-            db.Put(key, value, writeOptions: Options.WriteDefaultSync);
+            _db.Put(key, value, writeOptions: Options.WriteDefaultSync);
         }
     }
 }

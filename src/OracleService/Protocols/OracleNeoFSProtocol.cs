@@ -49,7 +49,7 @@ namespace Neo.Plugins
             Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
             try
             {
-                (OracleResponseCode code, string data) = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
+                (OracleResponseCode code, string data) = await GetAsync(uri, Settings.Default.NeoFs.EndPoint, cancellation);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result, code: {code}, data: {data}");
                 return (code, data);
             }
@@ -82,7 +82,7 @@ namespace Neo.Plugins
             };
             using Client client = new(privateKey, host);
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
-            tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
+            tokenSource.CancelAfter(Settings.Default.NeoFs.Timeout);
             if (ps.Length == 2)
                 return GetPayload(client, objectAddr, tokenSource.Token);
             return ps[2] switch

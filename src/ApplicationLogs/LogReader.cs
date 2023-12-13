@@ -56,16 +56,16 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public JToken GetApplicationLog(JArray _params)
+        public JToken GetApplicationLog(JArray @params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = UInt256.Parse(@params[0].AsString());
             byte[] value = _db.TryGet(hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
             JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
-            if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
+            if (@params.Count >= 2 && Enum.TryParse(@params[1].AsString(), true, out TriggerType trigger))
             {
                 var executions = raw["executions"] as JArray;
                 for (int i = 0; i < executions.Count;)

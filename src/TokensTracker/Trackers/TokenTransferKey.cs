@@ -18,7 +18,7 @@ namespace Neo.Plugins.Trackers
     public class TokenTransferKey : ISerializable
     {
         public UInt160 UserScriptHash { get; protected set; }
-        public ulong TimestampMS { get; protected set; }
+        public ulong TimestampMs { get; protected set; }
         public UInt160 AssetScriptHash { get; protected set; }
         public uint BlockXferNotificationIndex { get; protected set; }
 
@@ -27,14 +27,14 @@ namespace Neo.Plugins.Trackers
             if (userScriptHash is null || assetScriptHash is null)
                 throw new ArgumentNullException();
             UserScriptHash = userScriptHash;
-            TimestampMS = timestamp;
+            TimestampMs = timestamp;
             AssetScriptHash = assetScriptHash;
             BlockXferNotificationIndex = xferIndex;
         }
         public virtual void Serialize(BinaryWriter writer)
         {
             writer.Write(UserScriptHash);
-            writer.Write(BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(TimestampMS) : TimestampMS);
+            writer.Write(BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(TimestampMs) : TimestampMs);
             writer.Write(AssetScriptHash);
             writer.Write(BlockXferNotificationIndex);
         }
@@ -42,7 +42,7 @@ namespace Neo.Plugins.Trackers
         public virtual void Deserialize(ref MemoryReader reader)
         {
             UserScriptHash.Deserialize(ref reader);
-            TimestampMS = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(reader.ReadUInt64()) : reader.ReadUInt64();
+            TimestampMs = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(reader.ReadUInt64()) : reader.ReadUInt64();
             AssetScriptHash.Deserialize(ref reader);
             BlockXferNotificationIndex = reader.ReadUInt32();
         }

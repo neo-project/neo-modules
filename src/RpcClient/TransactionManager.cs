@@ -28,24 +28,24 @@ namespace Neo.Network.RPC
     {
         private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
 
-        private readonly RpcClient rpcClient;
+        private readonly RpcClient _rpcClient;
 
         /// <summary>
         /// The Transaction context to manage the witnesses
         /// </summary>
-        private readonly ContractParametersContext context;
+        private readonly ContractParametersContext _context;
 
         /// <summary>
         /// This container stores the keys for sign the transaction
         /// </summary>
-        private readonly List<SignItem> signStore = new List<SignItem>();
+        private readonly List<SignItem> _signStore = new List<SignItem>();
 
         /// <summary>
         /// The Transaction managed by this instance
         /// </summary>
-        private readonly Transaction tx;
+        private readonly Transaction _tx;
 
-        public Transaction Tx => tx;
+        public Transaction Tx => _tx;
 
         /// <summary>
         /// TransactionManager Constructor
@@ -54,9 +54,9 @@ namespace Neo.Network.RPC
         /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
         public TransactionManager(Transaction tx, RpcClient rpcClient)
         {
-            this.tx = tx;
-            this.context = new ContractParametersContext(null, tx, rpcClient.protocolSettings.Network);
-            this.rpcClient = rpcClient;
+            this._tx = tx;
+            this._context = new ContractParametersContext(null, tx, rpcClient.ProtocolSettings.Network);
+            this._rpcClient = rpcClient;
         }
 
         /// <summary>
@@ -125,15 +125,13 @@ namespace Neo.Network.RPC
                 throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash})");
             }
 
-            SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
+            SignItem item = _signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
             if (item is null)
             {
-                signStore.Add(new SignItem { Contract = contract, KeyPairs = new HashSet<KeyPair> { key } });
+                _signStore.Add(new SignItem { Contract = contract, KeyPairs = new HashSet<KeyPair> { key } });
             }
-            else if (!item.KeyPairs.Contains(key))
-            {
+            else
                 item.KeyPairs.Add(key);
-            }
         }
 
         /// <summary>
@@ -143,7 +141,7 @@ namespace Neo.Network.RPC
         /// <param name="parameters">The witness invocation parameters</param>
         public TransactionManager AddWitness(Contract contract, params object[] parameters)
         {
-            if (!context.Add(contract, parameters))
+            if (!_context.Add(contract, parameters))
             {
                 throw new Exception("AddWitness failed!");
             };
@@ -172,20 +170,20 @@ namespace Neo.Network.RPC
                 InvocationScript = Array.Empty<byte>(),
                 VerificationScript = GetVerificationScript(u)
             }).ToArray();
-            Tx.NetworkFee = await rpcClient.CalculateNetworkFeeAsync(Tx).ConfigureAwait(false);
+            Tx.NetworkFee = await _rpcClient.CalculateNetworkFeeAsync(Tx).ConfigureAwait(false);
             Tx.Witnesses = null;
 
-            var gasBalance = await new Nep17API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
+            var gasBalance = await new Nep17API(_rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
-                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(rpcClient.protocolSettings.AddressVersion)}");
+                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(_rpcClient.ProtocolSettings.AddressVersion)}");
 
             // Sign with signStore
-            for (int i = 0; i < signStore.Count; i++)
+            for (int i = 0; i < _signStore.Count; i++)
             {
-                foreach (var key in signStore[i].KeyPairs)
+                foreach (var key in _signStore[i].KeyPairs)
                 {
-                    byte[] signature = Tx.Sign(key, rpcClient.protocolSettings.Network);
-                    if (!context.AddSignature(signStore[i].Contract, key.PublicKey, signature))
+                    byte[] signature = Tx.Sign(key, _rpcClient.ProtocolSettings.Network);
+                    if (!_context.AddSignature(_signStore[i].Contract, key.PublicKey, signature))
                     {
                         throw new Exception("AddSignature failed!");
                     }
@@ -193,17 +191,17 @@ namespace Neo.Network.RPC
             }
 
             // Verify witness count
-            if (!context.Completed)
+            if (!_context.Completed)
             {
                 throw new Exception($"Please add signature or witness first!");
             }
-            Tx.Witnesses = context.GetWitnesses();
+            Tx.Witnesses = _context.GetWitnesses();
             return Tx;
         }
 
         private byte[] GetVerificationScript(UInt160 hash)
         {
-            foreach (var item in signStore)
+            foreach (var item in _signStore)
             {
                 if (item.Contract.ScriptHash == hash) return item.Contract.Script;
             }

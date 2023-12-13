@@ -25,7 +25,7 @@ namespace Neo.Cryptography.MPTTrie
             if (value is null) throw new ArgumentNullException(nameof(value));
             var n = new Node
             {
-                type = NodeType.LeafNode,
+                _type = NodeType.LeafNode,
                 Value = value,
                 Reference = 1,
             };

@@ -17,7 +17,7 @@ namespace Neo.Network.RPC
 {
     public class TransactionManagerFactory
     {
-        private readonly RpcClient rpcClient;
+        private readonly RpcClient _rpcClient;
 
         /// <summary>
         /// TransactionManagerFactory Constructor
@@ -25,7 +25,7 @@ namespace Neo.Network.RPC
         /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
         public TransactionManagerFactory(RpcClient rpcClient)
         {
-            this.rpcClient = rpcClient;
+            this._rpcClient = rpcClient;
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<TransactionManager> MakeTransactionAsync(ReadOnlyMemory<byte> script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
-            RpcInvokeResult invokeResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
+            RpcInvokeResult invokeResult = await _rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
             return await MakeTransactionAsync(script, invokeResult.GasConsumed, signers, attributes).ConfigureAwait(false);
         }
 
@@ -51,7 +51,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<TransactionManager> MakeTransactionAsync(ReadOnlyMemory<byte> script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
-            uint blockCount = await rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
+            uint blockCount = await _rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
 
             var tx = new Transaction
             {
@@ -59,12 +59,12 @@ namespace Neo.Network.RPC
                 Nonce = (uint)new Random().Next(),
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
-                ValidUntilBlock = blockCount - 1 + rpcClient.protocolSettings.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = blockCount - 1 + _rpcClient.ProtocolSettings.MaxValidUntilBlockIncrement,
                 SystemFee = systemFee,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
-            return new TransactionManager(tx, rpcClient);
+            return new TransactionManager(tx, _rpcClient);
         }
     }
 }

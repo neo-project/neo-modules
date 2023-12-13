@@ -17,52 +17,52 @@ namespace Neo.Plugins.Storage
 {
     internal class Snapshot : ISnapshot
     {
-        private readonly DB db;
-        private readonly LSnapshot snapshot;
-        private readonly ReadOptions options;
-        private readonly WriteBatch batch;
+        private readonly DB _db;
+        private readonly LSnapshot _snapshot;
+        private readonly ReadOptions _options;
+        private readonly WriteBatch _batch;
 
         public Snapshot(DB db)
         {
-            this.db = db;
-            this.snapshot = db.GetSnapshot();
-            this.options = new ReadOptions { FillCache = false, Snapshot = snapshot };
-            this.batch = new WriteBatch();
+            this._db = db;
+            this._snapshot = db.GetSnapshot();
+            this._options = new ReadOptions { FillCache = false, Snapshot = _snapshot };
+            this._batch = new WriteBatch();
         }
 
         public void Commit()
         {
-            db.Write(WriteOptions.Default, batch);
+            _db.Write(WriteOptions.Default, _batch);
         }
 
         public void Delete(byte[] key)
         {
-            batch.Delete(key);
+            _batch.Delete(key);
         }
 
         public void Dispose()
         {
-            snapshot.Dispose();
+            _snapshot.Dispose();
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(options, prefix, direction, (k, v) => (k, v));
+            return _db.Seek(_options, prefix, direction, (k, v) => (k, v));
         }
 
         public void Put(byte[] key, byte[] value)
         {
-            batch.Put(key, value);
+            _batch.Put(key, value);
         }
 
         public bool Contains(byte[] key)
         {
-            return db.Contains(options, key);
+            return _db.Contains(_options, key);
         }
 
         public byte[] TryGet(byte[] key)
         {
-            return db.Get(options, key);
+            return _db.Get(_options, key);
         }
     }
 }

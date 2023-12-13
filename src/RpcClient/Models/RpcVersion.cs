@@ -32,28 +32,29 @@ namespace Neo.Network.RPC.Models
 
             public JObject ToJson()
             {
-                JObject json = new();
-                json["network"] = Network;
-                json["validatorscount"] = ValidatorsCount;
-                json["msperblock"] = MillisecondsPerBlock;
-                json["maxvaliduntilblockincrement"] = MaxValidUntilBlockIncrement;
-                json["maxtraceableblocks"] = MaxTraceableBlocks;
-                json["addressversion"] = AddressVersion;
-                json["maxtransactionsperblock"] = MaxTransactionsPerBlock;
-                json["memorypoolmaxtransactions"] = MemoryPoolMaxTransactions;
-                json["initialgasdistribution"] = InitialGasDistribution;
-                json["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
+                return new JObject
                 {
-                    // Strip HF_ prefix.
-                    ["name"] = StripPrefix(s.Key.ToString(), "HF_"),
-                    ["blockheight"] = s.Value,
-                }));
-                return json;
+                    ["network"] = Network,
+                    ["validatorscount"] = ValidatorsCount,
+                    ["msperblock"] = MillisecondsPerBlock,
+                    ["maxvaliduntilblockincrement"] = MaxValidUntilBlockIncrement,
+                    ["maxtraceableblocks"] = MaxTraceableBlocks,
+                    ["addressversion"] = AddressVersion,
+                    ["maxtransactionsperblock"] = MaxTransactionsPerBlock,
+                    ["memorypoolmaxtransactions"] = MemoryPoolMaxTransactions,
+                    ["initialgasdistribution"] = InitialGasDistribution,
+                    ["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
+                    {
+                        // Strip HF_ prefix.
+                        ["name"] = StripPrefix(s.Key.ToString(), "HF_"),
+                        ["blockheight"] = s.Value,
+                    }))
+                };
             }
 
             public static RpcProtocol FromJson(JObject json)
             {
-                return new()
+                return new RpcProtocol
                 {
                     Network = (uint)json["network"].AsNumber(),
                     ValidatorsCount = (int)json["validatorscount"].AsNumber(),
@@ -91,19 +92,20 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["network"] = Protocol.Network; // Obsolete
-            json["tcpport"] = TcpPort;
-            json["wsport"] = WsPort;
-            json["nonce"] = Nonce;
-            json["useragent"] = UserAgent;
-            json["protocol"] = Protocol.ToJson();
-            return json;
+            return new JObject
+            {
+                ["network"] = Protocol.Network, // Obsolete
+                ["tcpport"] = TcpPort,
+                ["wsport"] = WsPort,
+                ["nonce"] = Nonce,
+                ["useragent"] = UserAgent,
+                ["protocol"] = Protocol.ToJson()
+            };
         }
 
         public static RpcVersion FromJson(JObject json)
         {
-            return new()
+            return new RpcVersion
             {
                 TcpPort = (int)json["tcpport"].AsNumber(),
                 WsPort = (int)json["wsport"].AsNumber(),

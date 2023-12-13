@@ -22,7 +22,7 @@ namespace Neo.Cryptography.MPTTrie
         {
             var n = new Node
             {
-                type = NodeType.BranchNode,
+                _type = NodeType.BranchNode,
                 Reference = 1,
                 Children = new Node[BranchChildCount],
             };

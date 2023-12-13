@@ -21,10 +21,11 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["publickey"] = PublicKey;
-            json["votes"] = Votes.ToString();
-            return json;
+            return new JObject
+            {
+                ["publickey"] = PublicKey,
+                ["votes"] = Votes.ToString()
+            };
         }
 
         public static RpcValidator FromJson(JObject json)

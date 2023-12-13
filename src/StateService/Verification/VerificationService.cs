@@ -29,12 +29,12 @@ namespace Neo.Plugins.StateService.Verification
         private class Timer { public uint Index; }
         private static readonly uint TimeoutMilliseconds = StatePlugin.System.Settings.MillisecondsPerBlock;
         private static readonly uint DelayMilliseconds = 3000;
-        private readonly Wallet wallet;
-        private readonly ConcurrentDictionary<uint, VerificationContext> contexts = new ConcurrentDictionary<uint, VerificationContext>();
+        private readonly Wallet _wallet;
+        private readonly ConcurrentDictionary<uint, VerificationContext> _contexts = new ConcurrentDictionary<uint, VerificationContext>();
 
         public VerificationService(Wallet wallet)
         {
-            this.wallet = wallet;
+            this._wallet = wallet;
             StatePlugin.System.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
 
@@ -47,7 +47,7 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnStateRootVote(Vote vote)
         {
-            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature.ToArray()))
+            if (_contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature.ToArray()))
             {
                 CheckVotes(context);
             }
@@ -65,33 +65,33 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnBlockPersisted(uint index)
         {
-            if (MaxCachedVerificationProcessCount <= contexts.Count)
+            if (MaxCachedVerificationProcessCount <= _contexts.Count)
             {
-                contexts.Keys.OrderBy(p => p).Take(contexts.Count - MaxCachedVerificationProcessCount + 1).ForEach(p =>
+                _contexts.Keys.OrderBy(p => p).Take(_contexts.Count - MaxCachedVerificationProcessCount + 1).ForEach(p =>
                 {
-                    if (contexts.TryRemove(p, out var value))
+                    if (_contexts.TryRemove(p, out var value))
                     {
                         value.Timer.CancelIfNotNull();
                     }
                 });
             }
-            var p = new VerificationContext(wallet, index);
-            if (p.IsValidator && contexts.TryAdd(index, p))
+            var p = new VerificationContext(_wallet, index);
+            if (p.IsValidator && _contexts.TryAdd(index, p))
             {
                 p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(DelayMilliseconds), Self, new Timer
                 {
                     Index = index,
                 }, ActorRefs.NoSender);
-                Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={contexts.Count}");
+                Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={_contexts.Count}");
             }
         }
 
         private void OnValidatedRootPersisted(uint index)
         {
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"persisted state root, height={index}");
-            foreach (var i in contexts.Where(i => i.Key <= index))
+            foreach (var i in _contexts.Where(i => i.Key <= index))
             {
-                if (contexts.TryRemove(i.Key, out var value))
+                if (_contexts.TryRemove(i.Key, out var value))
                 {
                     value.Timer.CancelIfNotNull();
                 }
@@ -100,7 +100,7 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnTimer(uint index)
         {
-            if (contexts.TryGetValue(index, out VerificationContext context))
+            if (_contexts.TryGetValue(index, out VerificationContext context))
             {
                 SendVote(context);
                 CheckVotes(context);

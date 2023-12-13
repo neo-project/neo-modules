@@ -18,33 +18,33 @@ namespace Neo.Plugins
         public override string Name => "RpcServer";
         public override string Description => "Enables RPC for the node";
 
-        private Settings settings;
-        private static readonly Dictionary<uint, RpcServer> servers = new();
-        private static readonly Dictionary<uint, List<object>> handlers = new();
+        private Settings _settings;
+        private static readonly Dictionary<uint, RpcServer> Servers = new();
+        private static readonly Dictionary<uint, List<object>> Handlers = new();
 
         protected override void Configure()
         {
-            settings = new Settings(GetConfiguration());
-            foreach (RpcServerSettings s in settings.Servers)
-                if (servers.TryGetValue(s.Network, out RpcServer server))
+            _settings = new Settings(GetConfiguration());
+            foreach (RpcServerSettings s in _settings.Servers)
+                if (Servers.TryGetValue(s.Network, out RpcServer server))
                     server.UpdateSettings(s);
         }
 
         public override void Dispose()
         {
-            foreach (var (_, server) in servers)
+            foreach (var (_, server) in Servers)
                 server.Dispose();
             base.Dispose();
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
+            RpcServerSettings s = _settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
             if (s is null) return;
 
             RpcServer server = new(system, s);
 
-            if (handlers.Remove(s.Network, out var list))
+            if (Handlers.Remove(s.Network, out var list))
             {
                 foreach (var handler in list)
                 {
@@ -53,20 +53,20 @@ namespace Neo.Plugins
             }
 
             server.StartRpcServer();
-            servers.TryAdd(s.Network, server);
+            Servers.TryAdd(s.Network, server);
         }
 
         public static void RegisterMethods(object handler, uint network)
         {
-            if (servers.TryGetValue(network, out RpcServer server))
+            if (Servers.TryGetValue(network, out RpcServer server))
             {
                 server.RegisterMethods(handler);
                 return;
             }
-            if (!handlers.TryGetValue(network, out var list))
+            if (!Handlers.TryGetValue(network, out var list))
             {
                 list = new List<object>();
-                handlers.Add(network, list);
+                Handlers.Add(network, list);
             }
             list.Add(handler);
         }

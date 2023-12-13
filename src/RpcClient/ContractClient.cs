@@ -24,7 +24,7 @@ namespace Neo.Network.RPC
     /// </summary>
     public class ContractClient
     {
-        protected readonly RpcClient rpcClient;
+        protected readonly RpcClient RpcClient;
 
         /// <summary>
         /// ContractClient Constructor
@@ -32,7 +32,7 @@ namespace Neo.Network.RPC
         /// <param name="rpc">the RPC client to call NEO RPC methods</param>
         public ContractClient(RpcClient rpc)
         {
-            rpcClient = rpc;
+            RpcClient = rpc;
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Neo.Network.RPC
         public Task<RpcInvokeResult> TestInvokeAsync(UInt160 scriptHash, string operation, params object[] args)
         {
             byte[] script = scriptHash.MakeScript(operation, args);
-            return rpcClient.InvokeScriptAsync(script);
+            return RpcClient.InvokeScriptAsync(script);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Neo.Network.RPC
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
+            TransactionManagerFactory factory = new TransactionManagerFactory(RpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
             return await manager
                 .AddSignature(key)

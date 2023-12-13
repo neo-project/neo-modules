@@ -29,7 +29,7 @@ namespace Neo.Plugins.Trackers.NEP_17
             if (ReferenceEquals(this, other)) return 0;
             int result = UserScriptHash.CompareTo(other.UserScriptHash);
             if (result != 0) return result;
-            int result2 = TimestampMS.CompareTo(other.TimestampMS);
+            int result2 = TimestampMs.CompareTo(other.TimestampMs);
             if (result2 != 0) return result2;
             int result3 = AssetScriptHash.CompareTo(other.AssetScriptHash);
             if (result3 != 0) return result3;
@@ -41,7 +41,7 @@ namespace Neo.Plugins.Trackers.NEP_17
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return UserScriptHash.Equals(other.UserScriptHash)
-                   && TimestampMS.Equals(other.TimestampMS) && AssetScriptHash.Equals(other.AssetScriptHash)
+                   && TimestampMs.Equals(other.TimestampMs) && AssetScriptHash.Equals(other.AssetScriptHash)
                    && BlockXferNotificationIndex.Equals(other.BlockXferNotificationIndex);
         }
 
@@ -52,7 +52,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(UserScriptHash.GetHashCode(), TimestampMS.GetHashCode(), AssetScriptHash.GetHashCode(), BlockXferNotificationIndex.GetHashCode());
+            return HashCode.Combine(UserScriptHash.GetHashCode(), TimestampMs.GetHashCode(), AssetScriptHash.GetHashCode(), BlockXferNotificationIndex.GetHashCode());
         }
     }
 }

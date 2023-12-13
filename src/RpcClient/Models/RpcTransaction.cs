@@ -24,7 +24,7 @@ namespace Neo.Network.RPC.Models
 
         public ulong? BlockTime { get; set; }
 
-        public VMState? VMState { get; set; }
+        public VMState? VmState { get; set; }
 
         public JObject ToJson(ProtocolSettings protocolSettings)
         {
@@ -34,9 +34,9 @@ namespace Neo.Network.RPC.Models
                 json["blockhash"] = BlockHash.ToString();
                 json["confirmations"] = Confirmations;
                 json["blocktime"] = BlockTime;
-                if (VMState != null)
+                if (VmState != null)
                 {
-                    json["vmstate"] = VMState;
+                    json["vmstate"] = VmState;
                 }
             }
             return json;
@@ -53,7 +53,7 @@ namespace Neo.Network.RPC.Models
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
                 transaction.Confirmations = (uint)json["confirmations"].AsNumber();
                 transaction.BlockTime = (ulong)json["blocktime"].AsNumber();
-                transaction.VMState = json["vmstate"]?.GetEnum<VMState>();
+                transaction.VmState = json["vmstate"]?.GetEnum<VMState>();
             }
             return transaction;
         }

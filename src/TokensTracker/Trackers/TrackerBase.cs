@@ -137,7 +137,7 @@ namespace Neo.Plugins.Trackers
         protected JObject ToJson(TokenTransferKey key, TokenTransfer value)
         {
             JObject transfer = new();
-            transfer["timestamp"] = key.TimestampMS;
+            transfer["timestamp"] = key.TimestampMs;
             transfer["assethash"] = key.AssetScriptHash.ToString();
             transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             transfer["amount"] = value.Amount.ToString();

@@ -15,35 +15,26 @@ namespace Neo.IO.Data.LevelDB
     public class ReadOptions
     {
         public static readonly ReadOptions Default = new ReadOptions();
-        internal readonly IntPtr handle = Native.leveldb_readoptions_create();
+        internal readonly IntPtr Handle = Native.leveldb_readoptions_create();
 
         public bool VerifyChecksums
         {
-            set
-            {
-                Native.leveldb_readoptions_set_verify_checksums(handle, value);
-            }
+            set => Native.leveldb_readoptions_set_verify_checksums(Handle, value);
         }
 
         public bool FillCache
         {
-            set
-            {
-                Native.leveldb_readoptions_set_fill_cache(handle, value);
-            }
+            set => Native.leveldb_readoptions_set_fill_cache(Handle, value);
         }
 
         public Snapshot Snapshot
         {
-            set
-            {
-                Native.leveldb_readoptions_set_snapshot(handle, value.handle);
-            }
+            set => Native.leveldb_readoptions_set_snapshot(Handle, value.handle);
         }
 
         ~ReadOptions()
         {
-            Native.leveldb_readoptions_destroy(handle);
+            Native.leveldb_readoptions_destroy(Handle);
         }
     }
 }

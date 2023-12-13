@@ -24,7 +24,7 @@ namespace Neo.Plugins
 {
     public class StorageDumper : Plugin
     {
-        private readonly Dictionary<uint, NeoSystem> systems = new Dictionary<uint, NeoSystem>();
+        private readonly Dictionary<uint, NeoSystem> _systems = new Dictionary<uint, NeoSystem>();
 
         private StreamWriter _writer;
         private JObject _currentBlock;
@@ -52,7 +52,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            systems.Add(system.Settings.Network, system);
+            _systems.Add(system.Settings.Network, system);
         }
 
         /// <summary>
@@ -61,16 +61,16 @@ namespace Neo.Plugins
         [ConsoleCommand("dump contract-storage", Category = "Storage", Description = "You can specify the contract script hash or use null to get the corresponding information from the storage")]
         private void OnDumpStorage(uint network, UInt160 contractHash = null)
         {
-            if (!systems.ContainsKey(network)) throw new InvalidOperationException("invalid network");
+            if (!_systems.ContainsKey(network)) throw new InvalidOperationException("invalid network");
             string path = $"dump_{network}.json";
             byte[] prefix = null;
             if (contractHash is not null)
             {
-                var contract = NativeContract.ContractManagement.GetContract(systems[network].StoreView, contractHash);
+                var contract = NativeContract.ContractManagement.GetContract(_systems[network].StoreView, contractHash);
                 if (contract is null) throw new InvalidOperationException("contract not found");
                 prefix = BitConverter.GetBytes(contract.Id);
             }
-            var states = systems[network].StoreView.Find(prefix);
+            var states = _systems[network].StoreView.Find(prefix);
             JArray array = new JArray(states.Where(p => !Settings.Default.Exclude.Contains(p.Key.Id)).Select(p => new JObject
             {
                 ["key"] = Convert.ToBase64String(p.Key.ToArray()),
@@ -122,11 +122,12 @@ namespace Neo.Plugins
                     array.Add(state);
                 }
 
-                JObject bs_item = new JObject();
-                bs_item["block"] = blockIndex;
-                bs_item["size"] = array.Count;
-                bs_item["storage"] = array;
-                _currentBlock = bs_item;
+                _currentBlock = new JObject
+                {
+                    ["block"] = blockIndex,
+                    ["size"] = array.Count,
+                    ["storage"] = array
+                };
             }
         }
 

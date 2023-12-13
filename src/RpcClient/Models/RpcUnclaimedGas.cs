@@ -20,10 +20,11 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["unclaimed"] = Unclaimed.ToString();
-            json["address"] = Address;
-            return json;
+            return new JObject
+            {
+                ["unclaimed"] = Unclaimed.ToString(),
+                ["address"] = Address
+            };
         }
 
         public static RpcUnclaimedGas FromJson(JObject json)

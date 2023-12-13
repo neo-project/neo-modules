@@ -16,8 +16,8 @@ namespace Neo.IO.Data.LevelDB
 {
     public enum CompressionType : byte
     {
-        kNoCompression = 0x0,
-        kSnappyCompression = 0x1
+        KNoCompression = 0x0,
+        KSnappyCompression = 0x1
     }
 
     public static class Native
@@ -38,16 +38,16 @@ namespace Neo.IO.Data.LevelDB
         public static extern void leveldb_close(IntPtr /*DB */ db);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void leveldb_put(IntPtr /* DB */ db, IntPtr /* WriteOptions*/ options, byte[] key, UIntPtr keylen, byte[] val, UIntPtr vallen, out IntPtr errptr);
+        public static extern void leveldb_put(IntPtr /* DB */ db, IntPtr /* WriteOptions*/ options, byte[] key, UIntPtr keyLen, byte[] val, UIntPtr vallen, out IntPtr errptr);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void leveldb_delete(IntPtr /* DB */ db, IntPtr /* WriteOptions*/ options, byte[] key, UIntPtr keylen, out IntPtr errptr);
+        public static extern void leveldb_delete(IntPtr /* DB */ db, IntPtr /* WriteOptions*/ options, byte[] key, UIntPtr keyLen, out IntPtr errptr);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_write(IntPtr /* DB */ db, IntPtr /* WriteOptions*/ options, IntPtr /* WriteBatch */ batch, out IntPtr errptr);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr leveldb_get(IntPtr /* DB */ db, IntPtr /* ReadOptions*/ options, byte[] key, UIntPtr keylen, out UIntPtr vallen, out IntPtr errptr);
+        public static extern IntPtr leveldb_get(IntPtr /* DB */ db, IntPtr /* ReadOptions*/ options, byte[] key, UIntPtr keyLen, out UIntPtr vallen, out IntPtr errptr);
 
         //[DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         //static extern void leveldb_approximate_sizes(IntPtr /* DB */ db, int num_ranges, byte[] range_start_key, long range_start_key_len, byte[] range_limit_key, long range_limit_key_len, out long sizes);
@@ -62,7 +62,7 @@ namespace Neo.IO.Data.LevelDB
         public static extern void leveldb_release_snapshot(IntPtr /* DB */ db, IntPtr /* SnapShot*/ snapshot);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr leveldb_property_value(IntPtr /* DB */ db, string propname);
+        public static extern IntPtr leveldb_property_value(IntPtr /* DB */ db, string propName);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_repair_db(IntPtr /* Options*/ options, string name, out IntPtr error);
@@ -70,7 +70,7 @@ namespace Neo.IO.Data.LevelDB
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_destroy_db(IntPtr /* Options*/ options, string name, out IntPtr error);
 
-        #region extensions 
+        #region extensions
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_free(IntPtr /* void */ ptr);
@@ -168,7 +168,7 @@ namespace Neo.IO.Data.LevelDB
         public static extern void leveldb_options_set_filter_policy(IntPtr /*Options*/ options, IntPtr /*FilterPolicy*/ policy);
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr leveldb_filterpolicy_create_bloom(int bits_per_key);
+        public static extern IntPtr leveldb_filterpolicy_create_bloom(int bitsPerKey);
         #endregion
 
         #region ReadOptions
@@ -219,7 +219,7 @@ namespace Neo.IO.Data.LevelDB
         public static extern void leveldb_writeoptions_set_sync(IntPtr /*WriteOptions*/ options, [MarshalAs(UnmanagedType.U1)] bool o);
         #endregion
 
-        #region Cache 
+        #region Cache
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr leveldb_cache_create_lru(int capacity);
 

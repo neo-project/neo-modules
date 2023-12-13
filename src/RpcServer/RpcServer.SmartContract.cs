@@ -34,8 +34,8 @@ namespace Neo.Plugins
 
         private void Initialize_SmartContract()
         {
-            if (settings.SessionEnabled)
-                timer = new(OnTimer, null, settings.SessionExpirationTime, settings.SessionExpirationTime);
+            if (_settings.SessionEnabled)
+                timer = new(OnTimer, null, _settings.SessionExpirationTime, _settings.SessionExpirationTime);
         }
 
         private void Dispose_SmartContract()
@@ -57,7 +57,7 @@ namespace Neo.Plugins
             lock (sessions)
             {
                 foreach (var (id, session) in sessions)
-                    if (DateTime.UtcNow >= session.StartTime + settings.SessionExpirationTime)
+                    if (DateTime.UtcNow >= session.StartTime + _settings.SessionExpirationTime)
                         toBeDestroyed.Add((id, session));
                 foreach (var (id, _) in toBeDestroyed)
                     sessions.Remove(id);
@@ -69,7 +69,7 @@ namespace Neo.Plugins
         private JObject GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
         {
             JObject json = new();
-            Session session = new(system, script, signers, witnesses, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
+            Session session = new(_system, script, signers, witnesses, _settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
                 json["script"] = Convert.ToBase64String(script);
@@ -111,7 +111,7 @@ namespace Neo.Plugins
                 session.Dispose();
                 throw;
             }
-            if (session.Iterators.Count == 0 || !settings.SessionEnabled)
+            if (session.Iterators.Count == 0 || !_settings.SessionEnabled)
             {
                 session.Dispose();
             }
@@ -201,7 +201,7 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
-            Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], _system.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
             bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
 
@@ -217,7 +217,7 @@ namespace Neo.Plugins
         protected virtual JToken InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
+            Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], _system.Settings) : null;
             Witness[] witnesses = _params.Count >= 2 ? WitnessesFromJson((JArray)_params[1]) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
             return GetInvokeResult(script, signers, witnesses, useDiagnostic);
@@ -229,7 +229,7 @@ namespace Neo.Plugins
             Guid sid = Guid.Parse(_params[0].GetString());
             Guid iid = Guid.Parse(_params[1].GetString());
             int count = _params[2].GetInt32();
-            if (count > settings.MaxIteratorResultItems)
+            if (count > _settings.MaxIteratorResultItems)
                 throw new ArgumentOutOfRangeException(nameof(count));
             Session session;
             lock (sessions)
@@ -264,7 +264,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
+                script_hash = AddressToScriptHash(address, _system.Settings.AddressVersion);
             }
             catch
             {
@@ -272,9 +272,9 @@ namespace Neo.Plugins
             }
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
-            var snapshot = system.StoreView;
+            var snapshot = _system.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
-            json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
+            json["address"] = script_hash.ToAddress(_system.Settings.AddressVersion);
             return json;
         }
 

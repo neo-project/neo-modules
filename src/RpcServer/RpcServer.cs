@@ -34,44 +34,44 @@ namespace Neo.Plugins
     {
         private const int MaxParamsDepth = 32;
 
-        private readonly Dictionary<string, Func<JArray, object>> methods = new();
+        private readonly Dictionary<string, Func<JArray, object>> _methods = new();
 
-        private IWebHost host;
-        private RpcServerSettings settings;
-        private readonly NeoSystem system;
-        private readonly LocalNode localNode;
+        private IWebHost _host;
+        private RpcServerSettings _settings;
+        private readonly NeoSystem _system;
+        private readonly LocalNode _localNode;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
-            this.system = system;
-            this.settings = settings;
-            localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            this._system = system;
+            this._settings = settings;
+            _localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
             Initialize_SmartContract();
         }
 
         private bool CheckAuth(HttpContext context)
         {
-            if (string.IsNullOrEmpty(settings.RpcUser)) return true;
+            if (string.IsNullOrEmpty(_settings.RpcUser)) return true;
 
             context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
 
-            string reqauth = context.Request.Headers["Authorization"];
-            string authstring;
+            string reqAuth = context.Request.Headers["Authorization"];
+            string authString;
             try
             {
-                authstring = Encoding.UTF8.GetString(Convert.FromBase64String(reqauth.Replace("Basic ", "").Trim()));
+                authString = Encoding.UTF8.GetString(Convert.FromBase64String(reqAuth.Replace("Basic ", "").Trim()));
             }
             catch
             {
                 return false;
             }
 
-            string[] authvalues = authstring.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
-            if (authvalues.Length < 2)
+            string[] authValues = authString.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+            if (authValues.Length < 2)
                 return false;
 
-            return authvalues[0] == settings.RpcUser && authvalues[1] == settings.RpcPass;
+            return authValues[0] == _settings.RpcUser && authValues[1] == _settings.RpcPass;
         }
 
         private static JObject CreateErrorResponse(JToken id, int code, string message, JToken data = null)
@@ -96,31 +96,31 @@ namespace Neo.Plugins
         public void Dispose()
         {
             Dispose_SmartContract();
-            if (host != null)
+            if (_host != null)
             {
-                host.Dispose();
-                host = null;
+                _host.Dispose();
+                _host = null;
             }
         }
 
         public void StartRpcServer()
         {
-            host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
+            _host = new WebHostBuilder().UseKestrel(options => options.Listen(_settings.BindAddress, _settings.Port, listenOptions =>
             {
                 // Default value is 5Mb
-                options.Limits.MaxRequestBodySize = settings.MaxRequestBodySize;
-                options.Limits.MaxRequestLineSize = Math.Min(settings.MaxRequestBodySize, options.Limits.MaxRequestLineSize);
+                options.Limits.MaxRequestBodySize = _settings.MaxRequestBodySize;
+                options.Limits.MaxRequestLineSize = Math.Min(_settings.MaxRequestBodySize, options.Limits.MaxRequestLineSize);
                 // Default value is 40
-                options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
+                options.Limits.MaxConcurrentConnections = _settings.MaxConcurrentConnections;
                 // Default value is 1 minutes
                 options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
                 // Default value is 15 seconds
                 options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
 
-                if (string.IsNullOrEmpty(settings.SslCert)) return;
-                listenOptions.UseHttps(settings.SslCert, settings.SslCertPassword, httpsConnectionAdapterOptions =>
+                if (string.IsNullOrEmpty(_settings.SslCert)) return;
+                listenOptions.UseHttps(_settings.SslCert, _settings.SslCertPassword, httpsConnectionAdapterOptions =>
                 {
-                    if (settings.TrustedAuthorities is null || settings.TrustedAuthorities.Length == 0)
+                    if (_settings.TrustedAuthorities is null || _settings.TrustedAuthorities.Length == 0)
                         return;
                     httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                     httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
@@ -128,7 +128,7 @@ namespace Neo.Plugins
                         if (err != SslPolicyErrors.None)
                             return false;
                         X509Certificate2 authority = chain.ChainElements[^1].Certificate;
-                        return settings.TrustedAuthorities.Contains(authority.Thumbprint);
+                        return _settings.TrustedAuthorities.Contains(authority.Thumbprint);
                     };
                 });
             }))
@@ -153,12 +153,12 @@ namespace Neo.Plugins
             })
             .Build();
 
-            host.Start();
+            _host.Start();
         }
 
         internal void UpdateSettings(RpcServerSettings settings)
         {
-            this.settings = settings;
+            this._settings = settings;
         }
 
         public async Task ProcessAsync(HttpContext context)
@@ -171,23 +171,23 @@ namespace Neo.Plugins
             JToken request = null;
             if (context.Request.Method == "GET")
             {
-                string jsonrpc = context.Request.Query["jsonrpc"];
+                string jsonRpc = context.Request.Query["jsonrpc"];
                 string id = context.Request.Query["id"];
                 string method = context.Request.Query["method"];
-                string _params = context.Request.Query["params"];
-                if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(method) && !string.IsNullOrEmpty(_params))
+                string @params = context.Request.Query["params"];
+                if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(method) && !string.IsNullOrEmpty(@params))
                 {
                     try
                     {
-                        _params = Encoding.UTF8.GetString(Convert.FromBase64String(_params));
+                        @params = Encoding.UTF8.GetString(Convert.FromBase64String(@params));
                     }
                     catch (FormatException) { }
                     request = new JObject();
-                    if (!string.IsNullOrEmpty(jsonrpc))
-                        request["jsonrpc"] = jsonrpc;
+                    if (!string.IsNullOrEmpty(jsonRpc))
+                        request["jsonrpc"] = jsonRpc;
                     request["id"] = id;
                     request["method"] = method;
-                    request["params"] = JToken.Parse(_params, MaxParamsDepth);
+                    request["params"] = JToken.Parse(@params, MaxParamsDepth);
                 }
             }
             else if (context.Request.Method == "POST")
@@ -238,9 +238,9 @@ namespace Neo.Plugins
             try
             {
                 string method = request["method"].AsString();
-                if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
+                if (!CheckAuth(context) || _settings.DisabledMethods.Contains(method))
                     throw new RpcException(-400, "Access denied");
-                if (!methods.TryGetValue(method, out var func))
+                if (!_methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
                 response["result"] = func((JArray)@params) switch
                 {
@@ -275,7 +275,7 @@ namespace Neo.Plugins
                 RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
                 if (attribute is null) continue;
                 string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
-                methods[name] = method.CreateDelegate<Func<JArray, object>>(handler);
+                _methods[name] = method.CreateDelegate<Func<JArray, object>>(handler);
             }
         }
     }

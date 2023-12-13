@@ -21,22 +21,22 @@ namespace Neo.Cryptography.MPTTrie
             if (hash is null) throw new ArgumentNullException(nameof(NewHash));
             var n = new Node
             {
-                type = NodeType.HashNode,
-                hash = hash,
+                _type = NodeType.HashNode,
+                _hash = hash,
             };
             return n;
         }
 
-        protected int HashSize => hash.Size;
+        protected int HashSize => _hash.Size;
 
         private void SerializeHash(BinaryWriter writer)
         {
-            writer.Write(hash);
+            writer.Write(_hash);
         }
 
         private void DeserializeHash(ref MemoryReader reader)
         {
-            hash = reader.ReadSerializable<UInt256>();
+            _hash = reader.ReadSerializable<UInt256>();
         }
     }
 }

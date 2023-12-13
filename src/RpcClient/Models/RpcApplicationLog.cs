@@ -51,7 +51,7 @@ namespace Neo.Network.RPC.Models
     {
         public TriggerType Trigger { get; set; }
 
-        public VMState VMState { get; set; }
+        public VMState VmState { get; set; }
 
         public long GasConsumed { get; set; }
 
@@ -65,7 +65,7 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = new();
             json["trigger"] = Trigger;
-            json["vmstate"] = VMState;
+            json["vmstate"] = VmState;
             json["gasconsumed"] = GasConsumed.ToString();
             json["exception"] = ExceptionMessage;
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
@@ -78,7 +78,7 @@ namespace Neo.Network.RPC.Models
             return new Execution
             {
                 Trigger = json["trigger"].GetEnum<TriggerType>(),
-                VMState = json["vmstate"].GetEnum<VMState>(),
+                VmState = json["vmstate"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToList(),

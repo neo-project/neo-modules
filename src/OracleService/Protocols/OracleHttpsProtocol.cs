@@ -23,26 +23,26 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
+        private readonly HttpClient _client = new(new HttpClientHandler() { AllowAutoRedirect = false });
 
         public OracleHttpsProtocol()
         {
             CustomAttributeData attribute = Assembly.GetExecutingAssembly().CustomAttributes.First(p => p.AttributeType == typeof(AssemblyInformationalVersionAttribute));
             string version = (string)attribute.ConstructorArguments[0].Value;
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NeoOracleService", version));
+            _client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NeoOracleService", version));
         }
 
         public void Configure()
         {
-            client.DefaultRequestHeaders.Accept.Clear();
+            _client.DefaultRequestHeaders.Accept.Clear();
             foreach (string type in Settings.Default.AllowedContentTypes)
-                client.DefaultRequestHeaders.Accept.ParseAdd(type);
-            client.Timeout = Settings.Default.Https.Timeout;
+                _client.DefaultRequestHeaders.Accept.ParseAdd(type);
+            _client.Timeout = Settings.Default.Https.Timeout;
         }
 
         public void Dispose()
         {
-            client.Dispose();
+            _client.Dispose();
         }
 
         public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
@@ -61,7 +61,7 @@ namespace Neo.Plugins
                         if (entry.IsInternal())
                             return (OracleResponseCode.Forbidden, null);
                     }
-                    message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                    message = await _client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
                     if (message.Headers.Location is not null)
                     {
                         uri = message.Headers.Location;

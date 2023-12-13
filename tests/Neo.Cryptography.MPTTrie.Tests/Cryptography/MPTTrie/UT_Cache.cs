@@ -9,7 +9,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
     [TestClass]
     public class UT_Cache
     {
-        private readonly byte Prefix = 0xf0;
+        private const byte Prefix = 0xf0;
 
         [TestMethod]
         public void TestResolveLeaf()
@@ -35,11 +35,11 @@ namespace Neo.Cryptography.MPTTrie.Tests
             store.Put(l.Hash.ToKey(), l.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new Cache(snapshot, Prefix);
-            var resolved_b = cache.Resolve(b.Hash);
-            Assert.AreEqual(b.Hash, resolved_b.Hash);
-            Assert.AreEqual(l.Hash, resolved_b.Children[1].Hash);
-            var resolved_l = cache.Resolve(l.Hash);
-            Assert.AreEqual(l.Value.Span.ToHexString(), resolved_l.Value.Span.ToHexString());
+            var resolvedB = cache.Resolve(b.Hash);
+            Assert.AreEqual(b.Hash, resolvedB.Hash);
+            Assert.AreEqual(l.Hash, resolvedB.Children[1].Hash);
+            var resolvedL = cache.Resolve(l.Hash);
+            Assert.AreEqual(l.Value.Span.ToHexString(), resolvedL.Value.Span.ToHexString());
         }
 
         [TestMethod]
@@ -65,17 +65,17 @@ namespace Neo.Cryptography.MPTTrie.Tests
             store.Put(b.Hash.ToKey(), b.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new Cache(snapshot, Prefix);
-            var resolved_b = cache.Resolve(b.Hash);
-            Assert.AreEqual(resolved_b.Hash, b.Hash);
-            foreach (var n in resolved_b.Children)
+            var resolvedB = cache.Resolve(b.Hash);
+            Assert.AreEqual(resolvedB.Hash, b.Hash);
+            foreach (var n in resolvedB.Children)
             {
                 Assert.IsTrue(n.IsEmpty);
             }
-            resolved_b.Children[1] = l;
-            resolved_b.SetDirty();
-            var resovled_b1 = cache.Resolve(b.Hash);
-            Assert.AreEqual(resovled_b1.Hash, b.Hash);
-            foreach (var n in resovled_b1.Children)
+            resolvedB.Children[1] = l;
+            resolvedB.SetDirty();
+            var resolvedB1 = cache.Resolve(b.Hash);
+            Assert.AreEqual(resolvedB1.Hash, b.Hash);
+            foreach (var n in resolvedB1.Children)
             {
                 Assert.IsTrue(n.IsEmpty);
             }

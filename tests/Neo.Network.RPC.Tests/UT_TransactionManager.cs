@@ -21,25 +21,25 @@ namespace Neo.Network.RPC.Tests
     [TestClass]
     public class UT_TransactionManager
     {
-        TransactionManager txManager;
-        Mock<RpcClient> rpcClientMock;
-        Mock<RpcClient> multiSigMock;
-        KeyPair keyPair1;
-        KeyPair keyPair2;
-        UInt160 sender;
-        UInt160 multiHash;
-        RpcClient client;
+        TransactionManager _txManager;
+        Mock<RpcClient> _rpcClientMock;
+        Mock<RpcClient> _multiSigMock;
+        KeyPair _keyPair1;
+        KeyPair _keyPair2;
+        UInt160 _sender;
+        UInt160 _multiHash;
+        RpcClient _client;
 
         [TestInitialize]
         public void TestSetup()
         {
-            keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
-            keyPair2 = new KeyPair(Wallet.GetPrivateKeyFromWIF("L2LGkrwiNmUAnWYb1XGd5mv7v2eDf6P4F3gHyXSrNJJR4ArmBp7Q"));
-            sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
-            multiHash = Contract.CreateMultiSigContract(2, new ECPoint[] { keyPair1.PublicKey, keyPair2.PublicKey }).ScriptHash;
-            rpcClientMock = MockRpcClient(sender, new byte[1]);
-            client = rpcClientMock.Object;
-            multiSigMock = MockMultiSig(multiHash, new byte[1]);
+            _keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
+            _keyPair2 = new KeyPair(Wallet.GetPrivateKeyFromWIF("L2LGkrwiNmUAnWYb1XGd5mv7v2eDf6P4F3gHyXSrNJJR4ArmBp7Q"));
+            _sender = Contract.CreateSignatureRedeemScript(_keyPair1.PublicKey).ToScriptHash();
+            _multiHash = Contract.CreateMultiSigContract(2, new ECPoint[] { _keyPair1.PublicKey, _keyPair2.PublicKey }).ScriptHash;
+            _rpcClientMock = MockRpcClient(_sender, new byte[1]);
+            _client = _rpcClientMock.Object;
+            _multiSigMock = MockMultiSig(_multiHash, new byte[1]);
         }
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
@@ -131,15 +131,15 @@ namespace Neo.Network.RPC.Tests
             {
                 new Signer
                 {
-                    Account = sender,
+                    Account = _sender,
                     Scopes= WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
+            _txManager = await TransactionManager.MakeTransactionAsync(_rpcClientMock.Object, script, signers);
 
-            var tx = txManager.Tx;
+            var tx = _txManager.Tx;
             Assert.AreEqual(WitnessScope.Global, tx.Signers[0].Scopes);
         }
 
@@ -150,32 +150,32 @@ namespace Neo.Network.RPC.Tests
             {
                 new Signer
                 {
-                    Account  =  sender,
+                    Account  =  _sender,
                     Scopes = WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager = await TransactionManager.MakeTransactionAsync(client, script, signers);
-            await txManager
-                .AddSignature(keyPair1)
+            _txManager = await TransactionManager.MakeTransactionAsync(_client, script, signers);
+            await _txManager
+                .AddSignature(_keyPair1)
                 .SignAsync();
 
             // get signature from Witnesses
-            var tx = txManager.Tx;
+            var tx = _txManager.Tx;
             ReadOnlyMemory<byte> signature = tx.Witnesses[0].InvocationScript[2..];
 
-            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(client.protocolSettings.Network), signature.Span, keyPair1.PublicKey));
+            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(_client.ProtocolSettings.Network), signature.Span, _keyPair1.PublicKey));
             // verify network fee and system fee
             Assert.AreEqual(100000000/*Mock*/, tx.NetworkFee);
             Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness
-            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair1).SignAsync());
-            Assert.AreEqual(null, txManager.Tx.Witnesses);
+            await ThrowsAsync<Exception>(async () => await _txManager.AddSignature(_keyPair1).SignAsync());
+            Assert.AreEqual(null, _txManager.Tx.Witnesses);
 
             // throw exception when the KeyPair is wrong
-            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync());
+            await ThrowsAsync<Exception>(async () => await _txManager.AddSignature(_keyPair2).SignAsync());
         }
 
         // https://docs.microsoft.com/en-us/archive/msdn-magazine/2014/november/async-programming-unit-testing-asynchronous-code#testing-exceptions
@@ -210,16 +210,16 @@ namespace Neo.Network.RPC.Tests
             {
                 new Signer
                 {
-                    Account = multiHash,
+                    Account = _multiHash,
                     Scopes = WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager = await TransactionManager.MakeTransactionAsync(multiSigMock.Object, script, signers);
-            await txManager
-                .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-                .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
+            _txManager = await TransactionManager.MakeTransactionAsync(_multiSigMock.Object, script, signers);
+            await _txManager
+                .AddMultiSig(_keyPair1, 2, _keyPair1.PublicKey, _keyPair2.PublicKey)
+                .AddMultiSig(_keyPair2, 2, _keyPair1.PublicKey, _keyPair2.PublicKey)
                 .SignAsync();
         }
 
@@ -231,7 +231,7 @@ namespace Neo.Network.RPC.Tests
             {
                 new Signer
                 {
-                    Account = sender,
+                    Account = _sender,
                     Scopes = WitnessScope.Global
                 },
                 new Signer
@@ -242,12 +242,12 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
-            txManager.AddWitness(UInt160.Zero);
-            txManager.AddSignature(keyPair1);
-            await txManager.SignAsync();
+            _txManager = await TransactionManager.MakeTransactionAsync(_rpcClientMock.Object, script, signers);
+            _txManager.AddWitness(UInt160.Zero);
+            _txManager.AddSignature(_keyPair1);
+            await _txManager.SignAsync();
 
-            var tx = txManager.Tx;
+            var tx = _txManager.Tx;
             Assert.AreEqual(2, tx.Witnesses.Length);
             Assert.AreEqual(40, tx.Witnesses[0].VerificationScript.Length);
             Assert.AreEqual(66, tx.Witnesses[0].InvocationScript.Length);

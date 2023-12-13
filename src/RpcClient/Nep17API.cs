@@ -86,13 +86,13 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
-            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
+            var contractState = await RpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
             byte[] script = Concat(
                 scriptHash.MakeScript("symbol"),
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
             var name = contractState.Manifest.Name;
-            var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
+            var result = await RpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
             return new RpcNep17TokenInfo
@@ -106,13 +106,13 @@ namespace Neo.Network.RPC
 
         public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(string contractHash)
         {
-            var contractState = await rpcClient.GetContractStateAsync(contractHash).ConfigureAwait(false);
+            var contractState = await RpcClient.GetContractStateAsync(contractHash).ConfigureAwait(false);
             byte[] script = Concat(
                 contractState.Hash.MakeScript("symbol"),
                 contractState.Hash.MakeScript("decimals"),
                 contractState.Hash.MakeScript("totalSupply"));
             var name = contractState.Manifest.Name;
-            var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
+            var result = await RpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
             return new RpcNep17TokenInfo
@@ -141,7 +141,7 @@ namespace Neo.Network.RPC
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
             if (addAssert) script = script.Concat(new[] { (byte)OpCode.ASSERT }).ToArray();
 
-            TransactionManagerFactory factory = new(rpcClient);
+            TransactionManagerFactory factory = new(RpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
             return await manager
@@ -170,7 +170,7 @@ namespace Neo.Network.RPC
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
             if (addAssert) script = script.Concat(new[] { (byte)OpCode.ASSERT }).ToArray();
 
-            TransactionManagerFactory factory = new(rpcClient);
+            TransactionManagerFactory factory = new(RpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
             return await manager
