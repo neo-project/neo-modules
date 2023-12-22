@@ -147,7 +147,7 @@ namespace Neo.Plugins.WebSocketServer.v1
 
             var hardforks = new JObject();
             foreach (var hf in _neoSystem.Settings.Hardforks)
-                hardforks.Properties.Add($"{hf.Key}".Replace("HF_", string.Empty).ToLower(), hf.Value);
+                hardforks.Properties.Add($"{hf.Key}".Replace("HF_", string.Empty).ToLowerInvariant(), hf.Value);
 
             return new JObject()
             {

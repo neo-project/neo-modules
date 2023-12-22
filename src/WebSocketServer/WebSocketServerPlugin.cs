@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -127,7 +128,7 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
                         e.ToJson(_neoSystem.Settings),
                         WebSocketResponseMessageEvent.MemoryPool)
                     .ToJson())
@@ -142,9 +143,9 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
                         WebSocketUtilityLogResult.Create(source, level, message).ToJson(),
-                        WebSocketResponseMessageEvent.System)
+                        WebSocketResponseMessageEvent.DebugLog)
                     .ToJson())
                 .ConfigureAwait(false));
         }
@@ -157,17 +158,17 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
                         e.ToJson(),
-                        WebSocketResponseMessageEvent.Log)
+                        WebSocketResponseMessageEvent.AppLog)
                     .ToJson())
                 .ConfigureAwait(false));
         }
 
         private void OnBlockchainCommitting(
             NeoSystem system,
-            Neo.Network.P2P.Payloads.Block block,
-            Neo.Persistence.DataCache snapshot,
+            Network.P2P.Payloads.Block block,
+            Persistence.DataCache snapshot,
             IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (_connections.IsEmpty)
@@ -179,39 +180,44 @@ namespace Neo.Plugins
                 _notifyEvents.AddRange(appExec.Notifications);
         }
 
-        private void OnBlockchainCommitted(NeoSystem system, Neo.Network.P2P.Payloads.Block block)
+        private void OnBlockchainCommitted(NeoSystem system, Network.P2P.Payloads.Block block)
         {
             if (_connections.IsEmpty)
                 return;
 
             _ = Task.Run(async () =>
-                await _connections.SendAllJsonAsync(
-                    WebSocketResponseMessage.Create(
-                        Guid.Empty,
-                        block.Header.ToJson(system.Settings),
-                        WebSocketResponseMessageEvent.Block)
-                    .ToJson())
-                .ConfigureAwait(false));
+                {
+                    // DO NOT CHANGE SYNCING ORDER IN THIS ASYNC METHOD!
+                    // SHOULD BE:
+                    //   BLOCK->(TRANSACTION->TX_CONTRACT_EVENTS->NEXT)
+                    var rId = RandomNumberGenerator.GetInt32(2, int.MaxValue);
 
-            foreach (var tx in block.Transactions)
-                _ = Task.Run(async () =>
                     await _connections.SendAllJsonAsync(
                         WebSocketResponseMessage.Create(
-                            Guid.Empty,
-                            tx.ToJson(system.Settings),
-                            WebSocketResponseMessageEvent.Transaction)
-                        .ToJson())
-                    .ConfigureAwait(false));
+                            rId,
+                            block.Header.ToJson(system.Settings),
+                            WebSocketResponseMessageEvent.Block)
+                        .ToJson()).ConfigureAwait(false);
 
-            _notifyEvents.ForEach(f =>
-                _ = Task.Run(async () =>
-                    await _connections.SendAllJsonAsync(
-                        WebSocketResponseMessage.Create(
-                            Guid.Empty,
-                            f.ToJson(),
-                            WebSocketResponseMessageEvent.Notify)
-                        .ToJson())
-                    .ConfigureAwait(false)));
+                    foreach (var tx in block.Transactions)
+                    {
+                        await _connections.SendAllJsonAsync(
+                            WebSocketResponseMessage.Create(
+                                rId,
+                                tx.ToJson(system.Settings),
+                                WebSocketResponseMessageEvent.Transaction)
+                            .ToJson()).ConfigureAwait(false);
+
+                        foreach (var n in _notifyEvents.Where(w => w.ScriptContainer.Hash == tx.Hash))
+                            await _connections.SendAllJsonAsync(
+                                WebSocketResponseMessage.Create(
+                                    rId,
+                                    n.ToJson(),
+                                    WebSocketResponseMessageEvent.ContractNotify)
+                                .ToJson()).ConfigureAwait(false);
+                    }
+
+                }).ConfigureAwait(false);
         }
 
         #endregion
@@ -244,14 +250,14 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        1, // System wide (1 for sent to all)
                         json,
-                        WebSocketResponseMessageEvent.System)
+                        WebSocketResponseMessageEvent.DebugLog)
                     .ToJson())
                 .ConfigureAwait(false));
         }
 
-        public static void SendJson(Guid clientId, byte eventId, JToken json)
+        public static void SendJson(Guid clientId, int requestId, byte eventId, JToken json)
         {
             if (_connections.IsEmpty)
                 return;
@@ -260,14 +266,14 @@ namespace Neo.Plugins
                 await _connections.SendJsonAsync(
                     clientId,
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        requestId,
                         json,
                         eventId)
                     .ToJson())
                 .ConfigureAwait(false));
         }
 
-        public static void SendJson(Guid clientId, WebSocketResponseMessageEvent eventId, JToken json)
+        public static void SendJson(Guid clientId, int requestId, WebSocketResponseMessageEvent eventId, JToken json)
         {
             if (_connections.IsEmpty)
                 return;
@@ -276,7 +282,7 @@ namespace Neo.Plugins
                 await _connections.SendJsonAsync(
                     clientId,
                     WebSocketResponseMessage.Create(
-                        Guid.Empty,
+                        requestId,
                         json,
                         eventId)
                     .ToJson())

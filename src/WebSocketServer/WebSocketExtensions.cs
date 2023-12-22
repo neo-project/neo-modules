@@ -2,10 +2,11 @@ using Neo.Json;
 using Neo.SmartContract;
 using Neo.VM;
 using System;
+using System.Linq;
 
 namespace Neo.Plugins
 {
-    public static class Extensions
+    public static class WebSocketExtensions
     {
         public static JToken ToJson(this NotifyEventArgs args) =>
             new JObject()
@@ -13,7 +14,7 @@ namespace Neo.Plugins
                 ["txhash"] = $"{args.ScriptContainer?.Hash}",
                 ["scripthash"] = $"{args?.ScriptHash}",
                 ["eventname"] = $"{args.EventName}",
-                ["state"] = args.State.ToJson(),
+                ["state"] = new JArray(args.State.Select(s => s.ToJson())),
             };
 
         public static JToken ToJson(this LogEventArgs logEventArgs) =>

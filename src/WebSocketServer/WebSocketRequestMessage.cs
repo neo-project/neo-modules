@@ -6,7 +6,7 @@ namespace Neo.Plugins
     internal class WebSocketRequestMessage
     {
         public Version Version { get; set; }
-        public Guid RequestId { get; set; }
+        public int RequestId { get; set; }
         public string Method { get; set; }
         public JArray Params { get; set; }
 
@@ -14,7 +14,7 @@ namespace Neo.Plugins
             new()
             {
                 Version = new(message["version"].AsString()),
-                RequestId = Guid.Parse(message["requestid"].AsString()),
+                RequestId = checked((int)message["requestid"].AsNumber()),
                 Method = message["method"].AsString(),
                 Params = (JArray)message["params"],
             };

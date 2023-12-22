@@ -6,12 +6,12 @@ namespace Neo.Plugins
 {
     internal class WebSocketResponseMessage
     {
-        public Version Version { get; init; } = new("1.0");
-        public Guid RequestId { get; set; }
-        public byte EventId { get; init; }
-        public JToken Result { get; init; }
+        public Version Version { get; private init; } = new("1.0");
+        public int RequestId { get; private init; }
+        public byte EventId { get; private init; }
+        public JToken Result { get; private init; }
 
-        internal static WebSocketResponseMessage Create(Guid requestId, JToken result, WebSocketResponseMessageEvent eventId) =>
+        internal static WebSocketResponseMessage Create(int requestId, JToken result, WebSocketResponseMessageEvent eventId) =>
             new()
             {
                 EventId = (byte)eventId,
@@ -19,7 +19,7 @@ namespace Neo.Plugins
                 Result = result,
             };
 
-        internal static WebSocketResponseMessage Create(Guid requestId, JToken result, byte eventId) =>
+        internal static WebSocketResponseMessage Create(int requestId, JToken result, byte eventId) =>
             new()
             {
                 EventId = eventId,
@@ -31,7 +31,7 @@ namespace Neo.Plugins
             new JObject()
             {
                 ["version"] = $"{Version}",
-                ["requestid"] = $"{RequestId}",
+                ["requestid"] = RequestId,
                 ["eventid"] = EventId,
                 ["result"] = Result,
             };
@@ -40,7 +40,7 @@ namespace Neo.Plugins
             new()
             {
                 Version = new(message["version"].AsString()),
-                RequestId = Guid.Parse(message["requestid"].AsString()),
+                RequestId = checked((int)message["requestid"].AsNumber()),
                 EventId = (byte)message["eventid"].AsNumber(),
                 Result = message["result"],
             };

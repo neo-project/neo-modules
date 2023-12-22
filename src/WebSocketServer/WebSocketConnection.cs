@@ -117,7 +117,7 @@ namespace Neo.Plugins
 
                 while (client.CloseStatus.HasValue == false)
                 {
-                    Guid requestId = Guid.Empty;
+                    var requestId = 1; // System wide (-1 for system error)
                     try
                     {
                         var message = await ReceiveMessageAsync(clientId, client).ConfigureAwait(false);
@@ -133,13 +133,25 @@ namespace Neo.Plugins
                             if (obj is Task<JToken> responseTask)
                                 obj = await responseTask.ConfigureAwait(false);
 
-                            obj = WebSocketResponseMessage.Create(message.RequestId, (JToken)obj, WebSocketResponseMessageEvent.Call);
+                            obj = WebSocketResponseMessage.Create(message.RequestId, (JToken)obj, WebSocketResponseMessageEvent.Method);
 
                             await SendJsonAsync(clientId, ((WebSocketResponseMessage)obj).ToJson()).ConfigureAwait(false);
                         }
                     }
+                    catch (WebSocketException ex)
+                    {
+                        // Indicates problem with request
+                        await SendJsonAsync(
+                            clientId,
+                            WebSocketResponseMessage.Create(
+                                requestId,
+                                WebSocketErrorResult.Create(ex).ToJson(),
+                                WebSocketResponseMessageEvent.Error)
+                            .ToJson());
+                    }
                     catch (Exception ex)
                     {
+                        // Indicates server fault or invalid data received
                         ex = ex.InnerException ?? ex;
                         await SendJsonAsync(
                             clientId,
