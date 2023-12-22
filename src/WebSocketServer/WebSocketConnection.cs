@@ -117,7 +117,7 @@ namespace Neo.Plugins
 
                 while (client.CloseStatus.HasValue == false)
                 {
-                    var requestId = 1; // System wide (-1 for system error)
+                    var requestId = -1; // System wide (-1 for system error)
                     try
                     {
                         var message = await ReceiveMessageAsync(clientId, client).ConfigureAwait(false);

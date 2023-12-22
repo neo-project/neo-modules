@@ -242,7 +242,7 @@ namespace Neo.Plugins
 
         #region Static
 
-        public static void SendAllJson(JToken json)
+        public static void SendAllJson(JToken json, int pluginId)
         {
             if (_connections.IsEmpty)
                 return;
@@ -250,7 +250,7 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
-                        1, // System wide (1 for sent to all)
+                        pluginId,
                         json,
                         WebSocketResponseMessageEvent.DebugLog)
                     .ToJson())
