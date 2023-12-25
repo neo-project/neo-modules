@@ -13,12 +13,12 @@ namespace Neo.Plugins
             var json = new JObject()
             {
                 ["scripthash"] = $"{args?.ScriptHash}",
-                ["eventname"] = $"{args.EventName}",
-                ["state"] = new JArray(args.State.Select(s => s.ToJson())),
+                ["eventname"] = $"{args?.EventName}",
+                ["state"] = new JArray(args?.State?.Select(s => s.ToJson())),
             };
 
             if (showTxHash)
-                json["txhash"] = $"{args.ScriptContainer?.Hash}";
+                json["txhash"] = $"{args?.ScriptContainer?.Hash}";
 
             return json;
         }
@@ -26,9 +26,9 @@ namespace Neo.Plugins
         public static JToken ToJson(this LogEventArgs logEventArgs) =>
             new JObject()
             {
-                ["txhash"] = $"{logEventArgs.ScriptContainer?.Hash}",
+                ["txhash"] = $"{logEventArgs?.ScriptContainer?.Hash}",
                 ["contract"] = $"{logEventArgs?.ScriptHash}",
-                ["message"] = logEventArgs.Message,
+                ["message"] = logEventArgs?.Message,
             };
 
         public static void TryCatch<TSource>(this TSource eventObject, Action<TSource> action)

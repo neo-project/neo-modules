@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Neo.Plugins
 {
-    internal class WebSocketResponseMessage
+    internal class WebSocketResponseMessage : IEquatable<WebSocketResponseMessage>
     {
         public Version Version { get; private init; } = new("1.0");
         public int RequestId { get; private init; }
@@ -55,8 +55,11 @@ namespace Neo.Plugins
             other != null && other.EventId == EventId && other.RequestId == RequestId &&
             other.Version == Version && other.Result == Result;
 
-        public override bool Equals(object obj) =>
-            Equals(obj as WebSocketResponseMessage);
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as WebSocketResponseMessage);
+        }
 
         public override int GetHashCode() =>
             HashCode.Combine(this, Version, EventId, RequestId, Result);
