@@ -243,7 +243,7 @@ namespace Neo.Plugins.WebSocketServer.v1
                 ["gasconsumed"] = $"{engine.GasConsumed}",
                 ["script"] = Convert.ToBase64String(script),
                 ["stack"] = new JArray(engine.ResultStack.Select(s => s.ToJson())),
-                ["exception"] = $"{engine.FaultException?.InnerException?.Message ?? engine.FaultException?.Message}",
+                ["exception"] = engine.FaultException?.InnerException?.Message ?? engine.FaultException?.Message,
                 ["notifications"] = new JArray(engine.Notifications.Select(s => s.ToJson(false))),
             };
         }
