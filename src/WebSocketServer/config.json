@@ -12,6 +12,7 @@
     "AllowOrigins": [],
     "ConcurrentProxyTimeout": 120,
     "MessageSize": 4096,
+    "MaxGasInvoke": 2000000000,
     "DebugMode": false
   }
 }

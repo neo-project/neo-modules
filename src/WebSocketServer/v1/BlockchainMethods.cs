@@ -6,6 +6,7 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
 using System;
 using System.Linq;
 using System.Net.WebSockets;
@@ -185,6 +186,66 @@ namespace Neo.Plugins.WebSocketServer.v1
             }
             else
                 throw new WebSocketException(-500, $"{reason}");
+        }
+
+        [WebSocketMethod]
+        public JToken InvokeContract(JArray _params)
+        {
+            UInt160 scriptHash = UInt160.Zero;
+            string methodName = string.Empty;
+            ContractParameter[] args = Array.Empty<ContractParameter>();
+            Signer[] signers = Array.Empty<Signer>();
+
+            try
+            {
+                if (_params.Count >= 1 && UInt160.TryParse(_params[0].AsString(), out scriptHash))
+                {
+                    if (_params.Count >= 2)
+                    {
+                        methodName = _params[1].AsString();
+                        if (_params.Count >= 3)
+                        {
+                            args = ((JArray)_params[2]).Select(s => ContractParameter.FromJson((JObject)s)).ToArray();
+                            if (_params.Count >= 4)
+                                signers = ((JArray)_params[3]).Select(s => Signer.FromJson((JObject)s)).ToArray();
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw new WebSocketException(-32602, "Invalid params");
+            }
+
+            if (scriptHash == UInt160.Zero || string.IsNullOrEmpty(methodName))
+                throw new WebSocketException(-32602, "Invalid params");
+
+            var snapshot = _neoSystem.GetSnapshot();
+            using var sb = new ScriptBuilder();
+            sb.EmitDynamicCall(scriptHash, methodName, args);
+
+            var script = sb.ToArray();
+            var tx = signers.Length == 0 ? null : new Transaction()
+            {
+                Version = 0,
+                Nonce = 0,
+                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) + _neoSystem.Settings.MaxValidUntilBlockIncrement,
+                Signers = signers,
+                Script = sb.ToArray(),
+                Attributes = Array.Empty<TransactionAttribute>(),
+            };
+
+            using var engine = ApplicationEngine.Run(script, snapshot, container: tx, settings: _neoSystem.Settings, gas: WebSocketServerSettings.Current.MaxGasInvoke);
+
+            return new JObject()
+            {
+                ["state"] = $"{engine.State}",
+                ["gasconsumed"] = $"{engine.GasConsumed}",
+                ["script"] = Convert.ToBase64String(script),
+                ["stack"] = new JArray(engine.ResultStack.Select(s => s.ToJson())),
+                ["exception"] = $"{engine.FaultException?.InnerException?.Message ?? engine.FaultException?.Message}",
+                ["notifications"] = new JArray(engine.Notifications.Select(s => s.ToJson(false))),
+            };
         }
     }
 }

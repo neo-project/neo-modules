@@ -18,6 +18,7 @@ namespace Neo.Plugins
         public string[] AllowOrigins { get; private init; }
         public uint ConcurrentProxyTimeout { get; private init; }
         public uint MessageSize { get; private init; }
+        public long MaxGasInvoke { get; private init; }
         public bool DebugMode { get; private init; }
 
         public static WebSocketServerSettings Default => new()
@@ -34,6 +35,7 @@ namespace Neo.Plugins
             AllowOrigins = Array.Empty<string>(),
             ConcurrentProxyTimeout = 120,
             MessageSize = 1024 * 4,
+            MaxGasInvoke = 20_00000000L,
             DebugMode = false,
         };
 
@@ -54,6 +56,7 @@ namespace Neo.Plugins
                 AllowOrigins = section.GetSection(nameof(AllowOrigins))?.Get<string[]>() ?? Default.AllowOrigins,
                 ConcurrentProxyTimeout = section.GetValue(nameof(ConcurrentProxyTimeout), Default.ConcurrentProxyTimeout),
                 MessageSize = section.GetValue(nameof(MessageSize), Default.MessageSize),
+                MaxGasInvoke = section.GetValue(nameof(MaxGasInvoke), Default.MaxGasInvoke),
                 DebugMode = section.GetValue(nameof(DebugMode), Default.DebugMode),
             };
 
