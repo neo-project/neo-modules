@@ -16,9 +16,9 @@ namespace Neo.Plugins.RestServer.Models.Wallet
     public class WalletCreateAccountModel
     {
         /// <summary>
-        /// Private key of the address you want to create. Can be null or empty.
+        /// Wif format Private key of the address you want to create. Can be null or empty.
         /// </summary>
-        /// <example>CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA=</example>
-        public byte[] PrivateKey { get; set; }
+        /// <example>L4EtTnAypiur9UahCn43fpAexTM2ww4BhsPghqvc77rec6bfYwHc</example>
+        public string Wif { get; set; }
     }
 }
