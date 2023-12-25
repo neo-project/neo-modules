@@ -227,19 +227,19 @@ namespace Neo.Plugins
             set => Add(key, value);
         }
 
-        public virtual void Add(Guid clientId, TClient client)
+        public void Add(Guid clientId, TClient client)
         {
             if (_clients.TryAdd(clientId, client))
                 OnConnect?.TryCatch(t => t.Invoke(clientId));
         }
 
-        public virtual void Add(KeyValuePair<Guid, TClient> client)
+        public void Add(KeyValuePair<Guid, TClient> client)
         {
             if (_clients.TryAdd(client.Key, client.Value))
                 OnConnect?.TryCatch(t => t.Invoke(client.Key));
         }
 
-        public virtual bool Remove(Guid clientId)
+        public bool Remove(Guid clientId)
         {
             if (_clients.TryRemove(clientId, out _))
             {
