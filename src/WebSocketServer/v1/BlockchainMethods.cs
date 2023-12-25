@@ -240,7 +240,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             return new JObject()
             {
                 ["state"] = $"{engine.State}",
-                ["gasconsumed"] = $"{engine.GasConsumed}",
+                ["gasconsumed"] = engine.GasConsumed,
                 ["script"] = Convert.ToBase64String(script),
                 ["stack"] = new JArray(engine.ResultStack.Select(s => s.ToJson())),
                 ["exception"] = engine.FaultException?.InnerException?.Message ?? engine.FaultException?.Message,
