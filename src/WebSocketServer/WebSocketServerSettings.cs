@@ -19,6 +19,7 @@ namespace Neo.Plugins
         public uint ConcurrentProxyTimeout { get; private init; }
         public uint MessageSize { get; private init; }
         public long MaxGasInvoke { get; private init; }
+        public uint WalletSessionTimeout { get; private init; }
         public bool DebugMode { get; private init; }
 
         public static WebSocketServerSettings Default => new()
@@ -33,9 +34,10 @@ namespace Neo.Plugins
             User = string.Empty,
             Pass = string.Empty,
             AllowOrigins = Array.Empty<string>(),
-            ConcurrentProxyTimeout = 120,
-            MessageSize = 1024 * 4,
+            ConcurrentProxyTimeout = 120u,
+            MessageSize = 1024u * 4u,
             MaxGasInvoke = 20_00000000L,
+            WalletSessionTimeout = 120u,
             DebugMode = false,
         };
 
@@ -57,6 +59,7 @@ namespace Neo.Plugins
                 ConcurrentProxyTimeout = section.GetValue(nameof(ConcurrentProxyTimeout), Default.ConcurrentProxyTimeout),
                 MessageSize = section.GetValue(nameof(MessageSize), Default.MessageSize),
                 MaxGasInvoke = section.GetValue(nameof(MaxGasInvoke), Default.MaxGasInvoke),
+                WalletSessionTimeout = section.GetValue(nameof(WalletSessionTimeout), Default.WalletSessionTimeout),
                 DebugMode = section.GetValue(nameof(DebugMode), Default.DebugMode),
             };
 

@@ -138,17 +138,6 @@ namespace Neo.Plugins
                             await SendJsonAsync(clientId, ((WebSocketResponseMessage)obj).ToJson()).ConfigureAwait(false);
                         }
                     }
-                    catch (WebSocketException ex)
-                    {
-                        // Indicates problem with request
-                        await SendJsonAsync(
-                            clientId,
-                            WebSocketResponseMessage.Create(
-                                requestId,
-                                WebSocketErrorResult.Create(ex).ToJson(),
-                                WebSocketResponseMessageEvent.Error)
-                            .ToJson());
-                    }
                     catch (Exception ex)
                     {
                         // Indicates server fault or invalid data received
