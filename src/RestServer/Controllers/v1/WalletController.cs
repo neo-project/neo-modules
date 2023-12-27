@@ -319,16 +319,39 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             session.ResetExpiration();
             var wallet = session.Wallet;
             var accounts = new List<WalletAddressModel>();
+            using var snapshot = _neosystem.GetSnapshot();
             foreach (var account in wallet.GetAccounts())
+            {
+                var contract = account.Contract;
+                var type = "Nonstandard";
+
+                if (account.WatchOnly)
+                {
+                    type = "WatchOnly";
+                }
+                else if (IsMultiSigContract(contract.Script))
+                {
+                    type = "MultiSignature";
+                }
+                else if (IsSignatureContract(contract.Script))
+                {
+                    type = "Standard";
+                }
+                else if (NativeContract.ContractManagement.GetContract(snapshot, account.ScriptHash) != null)
+                {
+                    type = "Deployed-Nonstandard";
+                }
                 accounts.Add(new WalletAddressModel()
                 {
                     Address = account.Address,
                     ScriptHash = account.ScriptHash,
-                    Publickey = account.GetKey().PublicKey,
+                    Publickey = account.GetKey()?.PublicKey,
                     HasKey = account.HasKey,
+                    Type = type,
                     Label = account.Label,
                     WatchOnly = account.WatchOnly,
                 });
+            }
             return Ok(accounts);
         }
 
