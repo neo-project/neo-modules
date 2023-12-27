@@ -181,9 +181,15 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
-            var account = Wallet.GetPrivateKeyFromWIF(model.Wif) == null || model.Wif.Length == 0 ?
-                wallet.CreateAccount() :
-                wallet.CreateAccount(Wallet.GetPrivateKeyFromWIF(model.Wif));
+            WalletAccount account;
+            if (model.Wif == null || model.Wif.Length == 0)
+            {
+                account = wallet.CreateAccount();
+            }
+            else
+            {
+                account = wallet.Import(model.Wif);
+            }
             if (account == null)
                 throw new WalletException("Account couldn't be created.");
             if (wallet is NEP6Wallet nep6)
