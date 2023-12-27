@@ -38,6 +38,11 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// <example>true</example>
         public bool HasKey { get; set; }
         /// <summary>
+        /// Address type.
+        /// </summary>
+        /// <example>Standard/MultiSignature/WatchOnly</example>
+        public string Type { get; set; }
+        /// <summary>
         /// The display name for the address.
         /// </summary>
         /// <example>Default Account</example>
