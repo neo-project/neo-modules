@@ -23,6 +23,7 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System.Net.Mime;
 using System.Numerics;
+using static Neo.SmartContract.Helper;
 
 namespace Neo.Plugins.RestServer.Controllers.v1
 {
