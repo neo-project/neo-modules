@@ -523,7 +523,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                 {
                     Address = account.Address,
                     ScriptHash = account.ScriptHash,
-                    PublicKey = account.GetKey().PublicKey,
+                    PublicKey = account.GetKey()?.PublicKey,
                     Neo = wallet.GetBalance(_neosystem.StoreView, NativeContract.NEO.Hash, account.ScriptHash).Value,
                     NeoHash = NativeContract.NEO.Hash,
                     Gas = wallet.GetBalance(_neosystem.StoreView, NativeContract.GAS.Hash, account.ScriptHash).Value,
