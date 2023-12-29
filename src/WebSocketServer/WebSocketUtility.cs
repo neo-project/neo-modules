@@ -1,4 +1,5 @@
 using Neo.Wallets;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -15,6 +16,13 @@ namespace Neo.Plugins
                 addressOrScriptHash.TryCatch(t => scriptHash = t.ToScriptHash(addressVersion));
 
             return scriptHash ?? UInt160.Zero;
+        }
+
+        public static BigInteger TryParseBigInteger(string value)
+        {
+            if (BigInteger.TryParse(value, out var result) == false)
+                return BigInteger.MinusOne;
+            return result;
         }
     }
 }
