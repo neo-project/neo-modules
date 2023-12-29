@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Neo.Cryptography.ECC;
 using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -351,7 +352,7 @@ internal class WalletMethods
                 {
                     Account = WebSocketUtility.TryParseScriptHash(s.AsString(), _neoSystem.Settings.AddressVersion),
                     Scopes = WitnessScope.CalledByEntry,
-                }) : null;
+                }).ToArray() : null;
 
             if (walletFromAddress == UInt160.Zero ||
                 WalletToAddress == UInt160.Zero ||
@@ -376,7 +377,7 @@ internal class WalletMethods
                         ScriptHash = WalletToAddress,
                         Data = data,
                     },
-                }, walletFromAddress, signers.ToArray());
+                }, walletFromAddress, signers);
 
             if (tx == null)
                 throw new WebSocketException(-100, "Transaction failed");
@@ -395,6 +396,89 @@ internal class WalletMethods
                 return tx.ToJson(_neoSystem.Settings);
 
             throw new WebSocketException(-100, $"Transaction {txResult.Result}");
+        }
+        else
+            throw new WebSocketException(-32602, "Invalid params");
+    }
+
+    [WebSocketMethod]
+    public JToken WalletCreate(JArray _params)
+    {
+        if (_params.Count != 3)
+            throw new WebSocketException(-32602, "Invalid params");
+
+        var walletName = _params[0].AsString();
+        var walletFilename = _params[1].AsString();
+        var walletPassword = _params[2].AsString();
+
+        if (string.IsNullOrEmpty(walletFilename) || string.IsNullOrEmpty(walletPassword))
+            throw new WebSocketException(-32602, "Invalid params");
+
+        if (File.Exists(walletFilename))
+            throw new WebSocketException(-100, "File exists");
+
+        var wallet = Wallet.Create(walletName, walletFilename, walletPassword, _neoSystem.Settings);
+
+        if (wallet == null)
+            throw new WebSocketException(-100, "Create Failed");
+
+        // Remove the default account, no need to have it.
+        var walletDefaultAccount = wallet.GetDefaultAccount();
+        if (walletDefaultAccount != null)
+            wallet.DeleteAccount(walletDefaultAccount.ScriptHash);
+
+        wallet.Save();
+
+        var sessionId = Guid.NewGuid();
+        _walletSessionManager[sessionId] = new(wallet);
+
+        return new JObject()
+        {
+            ["sessionid"] = $"{sessionId}",
+        };
+    }
+
+    [WebSocketMethod]
+    public JToken WalletMultiSigImport(JArray _params)
+    {
+        if (_params.Count != 3)
+            throw new WebSocketException(-32602, "Invalid params");
+
+        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        {
+            var publicKeys = ((JArray)_params[1]).Select(s => ECPoint.Parse(s.AsString(), ECCurve.Secp256r1)).ToArray();
+            var requiredSigns = unchecked((ushort)_params[2].AsNumber());
+
+            if (_walletSessionManager.ContainsKey(sessionId) == false)
+                throw new WebSocketException(-100, "Invalid session id");
+
+            if (publicKeys.Length == 0 || requiredSigns > publicKeys.Length || publicKeys.Length > 1024)
+                throw new WebSocketException(-100, "Invalid range");
+
+            var walletSession = _walletSessionManager[sessionId];
+            walletSession.ResetExpiration();
+
+            var wallet = walletSession.Wallet;
+
+            var multiSignContract = Contract.CreateMultiSigContract(requiredSigns, publicKeys);
+            var keyPair = wallet.GetAccount(publicKeys[0])?.GetKey();
+
+            if (keyPair == null)
+                throw new WebSocketException(-100, "Invalid key");
+
+            var walletMultiSignAccount = wallet.CreateAccount(multiSignContract, keyPair);
+
+            if (walletMultiSignAccount == null)
+                throw new WebSocketException(-100, "Account failed");
+
+            wallet.Save();
+
+            return new JObject()
+            {
+                ["scripthash"] = $"{walletMultiSignAccount.ScriptHash}",
+                ["address"] = walletMultiSignAccount.Address,
+                ["script"] = Convert.ToBase64String(multiSignContract.Script),
+            };
         }
         else
             throw new WebSocketException(-32602, "Invalid params");

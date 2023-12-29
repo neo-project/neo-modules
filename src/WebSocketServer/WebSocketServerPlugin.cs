@@ -85,7 +85,8 @@ namespace Neo.Plugins
         {
             _host?.Dispose();
             _connections?.Dispose();
-            _neoSystem.MemPool.TransactionAdded -= OnMemPoolTransactionAdded;
+            if (_neoSystem != null)
+                _neoSystem.MemPool.TransactionAdded -= OnMemPoolTransactionAdded;
             Blockchain.Committing -= OnBlockchainCommitting;
             Blockchain.Committed -= OnBlockchainCommitted;
             GC.SuppressFinalize(this);
