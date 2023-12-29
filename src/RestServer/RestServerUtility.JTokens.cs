@@ -80,7 +80,7 @@ namespace Neo.Plugins.RestServer
         public static JToken SignerToJToken(Signer signer, global::Newtonsoft.Json.JsonSerializer serializer) =>
             JToken.FromObject(new
             {
-                Rules = signer.Rules ?? Array.Empty<WitnessRule>(),
+                Rules = signer.Rules != null ? signer.Rules.Select(s => WitnessRuleToJToken(s, serializer)) : Array.Empty<JToken>(),
                 signer.Account,
                 signer.AllowedContracts,
                 signer.AllowedGroups,

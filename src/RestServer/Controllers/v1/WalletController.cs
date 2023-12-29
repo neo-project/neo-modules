@@ -388,7 +388,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
         }
 
         /// <summary>
-        /// Trasnsfer assets from one wallet address to another address on the blockchain.
+        /// Transfer assets from one wallet address to another address on the blockchain.
         /// </summary>
         /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
         /// <param name="model"></param>
@@ -478,7 +478,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
         }
 
         /// <summary>
-        /// Import multi-signature addresss into the wallet.
+        /// Import multi-signature address into the wallet.
         /// </summary>
         /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
         /// <param name="model"></param>
