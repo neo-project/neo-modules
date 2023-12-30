@@ -62,7 +62,7 @@ internal class WalletMethods
         if (Guid.TryParse(_params[0].AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
             if (_walletSessionManager.TryRemove(sessionId, out _) == false)
                 throw new WebSocketException(-100, "Failed to remove session");
 
@@ -84,7 +84,7 @@ internal class WalletMethods
         if (Guid.TryParse(_params[0].AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -114,7 +114,7 @@ internal class WalletMethods
         if (Guid.TryParse(_params[0].AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -164,7 +164,7 @@ internal class WalletMethods
                 throw new WebSocketException(-32602, "Invalid params");
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -202,7 +202,7 @@ internal class WalletMethods
                 throw new WebSocketException(-32602, "Invalid params");
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -240,7 +240,7 @@ internal class WalletMethods
                 throw new WebSocketException(-32602, "Invalid params");
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -273,7 +273,7 @@ internal class WalletMethods
         if (Guid.TryParse(_params[0].AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -313,7 +313,7 @@ internal class WalletMethods
                 throw new WebSocketException(-32602, "Invalid params");
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -360,7 +360,7 @@ internal class WalletMethods
                 throw new WebSocketException(-32602, "Invalid params");
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             var walletSession = _walletSessionManager[sessionId];
             walletSession.ResetExpiration();
@@ -450,7 +450,7 @@ internal class WalletMethods
             var requiredSigns = unchecked((ushort)_params[2].AsNumber());
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
-                throw new WebSocketException(-100, "Invalid session id");
+                throw new WebSocketException(-100, "Invalid session");
 
             if (publicKeys.Length == 0 || requiredSigns > publicKeys.Length || publicKeys.Length > 1024)
                 throw new WebSocketException(-100, "Invalid range");
@@ -479,6 +479,53 @@ internal class WalletMethods
                 ["address"] = walletMultiSignAccount.Address,
                 ["script"] = Convert.ToBase64String(multiSignContract.Script),
             };
+        }
+        else
+            throw new WebSocketException(-32602, "Invalid params");
+    }
+
+    [WebSocketMethod]
+    public JToken WalletAssets(JArray _params)
+    {
+        if (_params.Count != 1)
+            throw new WebSocketException(-32602, "Invalid params");
+
+        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        {
+            if (_walletSessionManager.ContainsKey(sessionId) == false)
+                throw new WebSocketException(-100, "Invalid session");
+
+            var walletSession = _walletSessionManager[sessionId];
+            walletSession.ResetExpiration();
+
+            var wallet = walletSession.Wallet;
+            var accounts = wallet.GetAccounts()
+                .Select(s => new JObject()
+                {
+                    ["scripthash"] = $"{s.ScriptHash}",
+                    ["address"] = s.Address,
+                    ["publickey"] = $"{s.GetKey().PublicKey}",
+                    ["assets"] = new JObject[]
+                    {
+                        new()
+                        {
+                            ["scripthash"] = $"{NativeContract.NEO.Hash}",
+                            ["symbol"] = NativeContract.NEO.Symbol,
+                            ["decimals"] = NativeContract.NEO.Decimals,
+                            ["balance"] = $"{wallet.GetBalance(_neoSystem.StoreView, NativeContract.NEO.Hash, s.ScriptHash).Value}",
+                        },
+                        new()
+                        {
+                            ["scripthash"] = $"{NativeContract.GAS.Hash}",
+                            ["symbol"] = NativeContract.GAS.Symbol,
+                            ["decimals"] = NativeContract.GAS.Decimals,
+                            ["balance"] = $"{wallet.GetBalance(_neoSystem.StoreView, NativeContract.GAS.Hash, s.ScriptHash).Value}",
+                        }
+                    }
+
+                });
+
+            return new JArray(accounts);
         }
         else
             throw new WebSocketException(-32602, "Invalid params");
