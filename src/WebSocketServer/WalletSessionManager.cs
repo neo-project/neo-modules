@@ -13,10 +13,10 @@ namespace Neo.Plugins
         public WalletSessionManager()
         {
             _timer = new(TimeSpan.FromSeconds(1));
-            _ = Task.Run(SessionTimeout);
+            _ = Task.Run(SessionTimeoutAsync);
         }
 
-        private async Task SessionTimeout()
+        private async Task SessionTimeoutAsync()
         {
             while (await _timer.WaitForNextTickAsync())
             {
