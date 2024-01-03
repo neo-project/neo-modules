@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.WebSocketServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>

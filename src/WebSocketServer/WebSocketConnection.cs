@@ -18,10 +18,10 @@ namespace Neo.Plugins
     {
         private readonly ConcurrentDictionary<Guid, TClient> _clients;
 
-        public static event WebSocketMessageSent OnMessageSent;
-        public static event WebSocketMessageReceived OnMessageReceived;
-        public static event WebSocketConnect OnConnect;
-        public static event WebSocketDisconnect OnDisconnect;
+        public static event WebSocketMessageSent? OnMessageSent;
+        public static event WebSocketMessageReceived? OnMessageReceived;
+        public static event WebSocketConnect? OnConnect;
+        public static event WebSocketDisconnect? OnDisconnect;
 
         public WebSocketConnection()
         {
@@ -125,10 +125,10 @@ namespace Neo.Plugins
                         {
                             requestId = message.RequestId;
 
-                            if (WebSocketServerPlugin.Methods.TryGetValue(message.Method, out var callMethod) == false)
+                            if (WebSocketServerPlugin.Methods.TryGetValue(message.Method!, out var callMethod) == false)
                                 throw new WebSocketException(-32601, "Method not found");
 
-                            var obj = callMethod(message.Params);
+                            var obj = callMethod(message.Params!);
 
                             if (obj is Task<JToken> responseTask)
                                 obj = await responseTask.ConfigureAwait(false);
@@ -173,8 +173,8 @@ namespace Neo.Plugins
 
         private static async Task<WebSocketRequestMessage> ReceiveMessageAsync(Guid clientId, WebSocket client)
         {
-            var buffer = new byte[WebSocketServerSettings.Current.MessageSize]; // 4096 bytes
-            WebSocketReceiveResult receiveResult = null;
+            var buffer = new byte[WebSocketServerSettings.Current?.MessageSize ?? WebSocketServerSettings.Default.MessageSize]; // 4096 bytes
+            WebSocketReceiveResult? receiveResult = null;
 
             using var ms = new MemoryStream();
             while (receiveResult == null || receiveResult.EndOfMessage == false)

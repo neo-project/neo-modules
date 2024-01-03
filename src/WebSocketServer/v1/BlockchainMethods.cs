@@ -34,9 +34,9 @@ namespace Neo.Plugins.WebSocketServer.v1
                 throw new WebSocketException(-32602, "Invalid params");
 
             Block block;
-            if (uint.TryParse(_params[0].AsString(), out var blockIndex))
+            if (uint.TryParse(_params[0]?.AsString(), out var blockIndex))
                 block = NativeContract.Ledger.GetBlock(_neoSystem.StoreView, blockIndex);
-            else if (UInt256.TryParse(_params[0].AsString(), out var blockHash))
+            else if (UInt256.TryParse(_params[0]?.AsString(), out var blockHash))
                 block = NativeContract.Ledger.GetBlock(_neoSystem.StoreView, blockHash);
             else
                 throw new WebSocketException(-32602, "Invalid params");
@@ -54,9 +54,9 @@ namespace Neo.Plugins.WebSocketServer.v1
                 throw new WebSocketException(-32602, "Invalid params");
 
             Block block;
-            if (uint.TryParse(_params[0].AsString(), out var blockIndex))
+            if (uint.TryParse(_params[0]?.AsString(), out var blockIndex))
                 block = NativeContract.Ledger.GetBlock(_neoSystem.StoreView, blockIndex);
-            else if (UInt256.TryParse(_params[0].AsString(), out var blockHash))
+            else if (UInt256.TryParse(_params[0]?.AsString(), out var blockHash))
                 block = NativeContract.Ledger.GetBlock(_neoSystem.StoreView, blockHash);
             else
                 throw new WebSocketException(-32602, "Invalid params");
@@ -74,7 +74,7 @@ namespace Neo.Plugins.WebSocketServer.v1
                 throw new WebSocketException(-32602, "Invalid params");
 
             Transaction tx;
-            if (UInt256.TryParse(_params[0].AsString(), out var txHash))
+            if (UInt256.TryParse(_params[0]?.AsString(), out var txHash))
                 tx = NativeContract.Ledger.GetTransaction(_neoSystem.StoreView, txHash);
             else
                 throw new WebSocketException(-32602, "Invalid params");
@@ -92,9 +92,9 @@ namespace Neo.Plugins.WebSocketServer.v1
                 throw new WebSocketException(-32602, "Invalid params");
 
             ContractState contractState;
-            if (int.TryParse(_params[0].AsString(), out var contractId))
+            if (int.TryParse(_params[0]?.AsString(), out var contractId))
                 contractState = NativeContract.ContractManagement.GetContractById(_neoSystem.StoreView, contractId);
-            else if (UInt160.TryParse(_params[0].AsString(), out var scriptHash))
+            else if (UInt160.TryParse(_params[0]?.AsString(), out var scriptHash))
                 contractState = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, scriptHash);
             else
                 throw new WebSocketException(-32602, "Invalid params");
@@ -174,7 +174,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             if (_params.Count != 1)
                 throw new WebSocketException(-32602, "Invalid params");
 
-            Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
+            Transaction tx = Convert.FromBase64String(_params[0]!.AsString()).AsSerializable<Transaction>();
             var reason = _neoSystem.Blockchain.Ask<RelayResult>(tx).Result;
 
             if (reason.Result == VerifyResult.Succeed)
@@ -198,16 +198,16 @@ namespace Neo.Plugins.WebSocketServer.v1
 
             try
             {
-                if (_params.Count >= 1 && UInt160.TryParse(_params[0].AsString(), out scriptHash))
+                if (_params.Count >= 1 && UInt160.TryParse(_params[0]?.AsString(), out scriptHash))
                 {
                     if (_params.Count >= 2)
                     {
-                        methodName = _params[1].AsString();
+                        methodName = _params[1]!.AsString();
                         if (_params.Count >= 3)
                         {
-                            args = ((JArray)_params[2]).Select(s => ContractParameter.FromJson((JObject)s)).ToArray();
+                            args = ((JArray)_params[2]!).Select(s => ContractParameter.FromJson((JObject)s!)).ToArray();
                             if (_params.Count >= 4)
-                                signers = ((JArray)_params[3]).Select(s => Signer.FromJson((JObject)s)).ToArray();
+                                signers = ((JArray)_params[3]!).Select(s => Signer.FromJson((JObject)s!)).ToArray();
                         }
                     }
                 }
@@ -235,7 +235,7 @@ namespace Neo.Plugins.WebSocketServer.v1
                 Attributes = Array.Empty<TransactionAttribute>(),
             };
 
-            using var engine = ApplicationEngine.Run(script, snapshot, container: tx, settings: _neoSystem.Settings, gas: WebSocketServerSettings.Current.MaxGasInvoke);
+            using var engine = ApplicationEngine.Run(script, snapshot, container: tx, settings: _neoSystem.Settings, gas: WebSocketServerSettings.Current?.MaxGasInvoke ?? WebSocketServerSettings.Default.MaxGasInvoke);
 
             return new JObject()
             {

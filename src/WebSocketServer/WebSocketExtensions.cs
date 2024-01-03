@@ -14,7 +14,9 @@ namespace Neo.Plugins
             {
                 ["scripthash"] = $"{args?.ScriptHash}",
                 ["eventname"] = $"{args?.EventName}",
-                ["state"] = new JArray(args?.State?.Select(s => s.ToJson())),
+                ["state"] = args?.State?.Count > 0 ?
+                    new JArray(args!.State.Select(s => s.ToJson())) :
+                    Array.Empty<JToken?>(),
             };
 
             if (showTxHash)

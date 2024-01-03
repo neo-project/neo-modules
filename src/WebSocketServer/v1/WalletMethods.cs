@@ -33,8 +33,8 @@ internal class WalletMethods
         if (_params.Count != 2)
             throw new WebSocketException(-32602, "Invalid params");
 
-        var walletFilename = _params[0].AsString();
-        var walletFilePassword = _params[1].AsString();
+        var walletFilename = _params[0]!.AsString();
+        var walletFilePassword = _params[1]!.AsString();
 
         if (File.Exists(walletFilename) == false)
             throw new WebSocketException(-100, $"File '{walletFilename}' could not be found.");
@@ -59,7 +59,7 @@ internal class WalletMethods
         if (_params.Count != 1)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");
@@ -81,7 +81,7 @@ internal class WalletMethods
         if (_params.Count != 1)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");
@@ -111,7 +111,7 @@ internal class WalletMethods
         if (_params.Count == 0)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");
@@ -120,7 +120,7 @@ internal class WalletMethods
             walletSession.ResetExpiration();
 
             var wifString = _params.Count == 2 ?
-                _params[1].AsString() :
+                _params[1]!.AsString() :
                 string.Empty;
 
             var wallet = walletSession.Wallet;
@@ -155,10 +155,10 @@ internal class WalletMethods
         if (_params.Count != 3)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1].AsString(), _neoSystem.Settings.AddressVersion);
-            var walletAssetScriptHash = WebSocketUtility.TryParseScriptHash(_params[2].AsString(), _neoSystem.Settings.AddressVersion);
+            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1]!.AsString(), _neoSystem.Settings.AddressVersion);
+            var walletAssetScriptHash = WebSocketUtility.TryParseScriptHash(_params[2]!.AsString(), _neoSystem.Settings.AddressVersion);
 
             if (walletAddress == UInt160.Zero || walletAssetScriptHash == UInt160.Zero)
                 throw new WebSocketException(-32602, "Invalid params");
@@ -194,9 +194,9 @@ internal class WalletMethods
         if (_params.Count != 2)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1].AsString(), _neoSystem.Settings.AddressVersion);
+            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1]!.AsString(), _neoSystem.Settings.AddressVersion);
 
             if (walletAddress == UInt160.Zero)
                 throw new WebSocketException(-32602, "Invalid params");
@@ -232,9 +232,9 @@ internal class WalletMethods
         if (_params.Count != 2)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var wif = _params[1].AsString();
+            var wif = _params[1]!.AsString();
 
             if (string.IsNullOrEmpty(wif))
                 throw new WebSocketException(-32602, "Invalid params");
@@ -270,7 +270,7 @@ internal class WalletMethods
         if (_params.Count != 1)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");
@@ -305,9 +305,9 @@ internal class WalletMethods
         if (_params.Count != 2)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1].AsString(), _neoSystem.Settings.AddressVersion);
+            var walletAddress = WebSocketUtility.TryParseScriptHash(_params[1]!.AsString(), _neoSystem.Settings.AddressVersion);
 
             if (walletAddress == UInt160.Zero)
                 throw new WebSocketException(-32602, "Invalid params");
@@ -340,17 +340,17 @@ internal class WalletMethods
         if (_params.Count != 5)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var assetId = WebSocketUtility.TryParseScriptHash(_params[1].AsString(), _neoSystem.Settings.AddressVersion);
-            var walletFromAddress = WebSocketUtility.TryParseScriptHash(_params[2].AsString(), _neoSystem.Settings.AddressVersion);
-            var WalletToAddress = WebSocketUtility.TryParseScriptHash(_params[3].AsString(), _neoSystem.Settings.AddressVersion);
-            var amount = WebSocketUtility.TryParseBigInteger(_params[4].AsString());
-            var data = _params.Count >= 6 ? Convert.FromBase64String(_params[5].AsString()) : null;
-            var signers = _params.Count >= 7 ? ((JArray)_params[6])
+            var assetId = WebSocketUtility.TryParseScriptHash(_params[1]!.AsString(), _neoSystem.Settings.AddressVersion);
+            var walletFromAddress = WebSocketUtility.TryParseScriptHash(_params[2]!.AsString(), _neoSystem.Settings.AddressVersion);
+            var WalletToAddress = WebSocketUtility.TryParseScriptHash(_params[3]!.AsString(), _neoSystem.Settings.AddressVersion);
+            var amount = WebSocketUtility.TryParseBigInteger(_params[4]!.AsString());
+            var data = _params.Count >= 6 ? Convert.FromBase64String(_params[5]!.AsString()) : null;
+            var signers = _params.Count >= 7 ? ((JArray)_params[6]!)
                 .Select(s => new Signer()
                 {
-                    Account = WebSocketUtility.TryParseScriptHash(s.AsString(), _neoSystem.Settings.AddressVersion),
+                    Account = WebSocketUtility.TryParseScriptHash(s!.AsString(), _neoSystem.Settings.AddressVersion),
                     Scopes = WitnessScope.CalledByEntry,
                 }).ToArray() : null;
 
@@ -407,9 +407,9 @@ internal class WalletMethods
         if (_params.Count != 3)
             throw new WebSocketException(-32602, "Invalid params");
 
-        var walletName = _params[0].AsString();
-        var walletFilename = _params[1].AsString();
-        var walletPassword = _params[2].AsString();
+        var walletName = _params[0]!.AsString();
+        var walletFilename = _params[1]!.AsString();
+        var walletPassword = _params[2]!.AsString();
 
         if (string.IsNullOrEmpty(walletFilename) || string.IsNullOrEmpty(walletPassword))
             throw new WebSocketException(-32602, "Invalid params");
@@ -444,10 +444,10 @@ internal class WalletMethods
         if (_params.Count != 3)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
-            var publicKeys = ((JArray)_params[1]).Select(s => ECPoint.Parse(s.AsString(), ECCurve.Secp256r1)).ToArray();
-            var requiredSigns = unchecked((ushort)_params[2].AsNumber());
+            var publicKeys = ((JArray)_params[1]!).Select(s => ECPoint.Parse(s!.AsString(), ECCurve.Secp256r1)).ToArray();
+            var requiredSigns = unchecked((ushort)_params[2]!.AsNumber());
 
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");
@@ -490,7 +490,7 @@ internal class WalletMethods
         if (_params.Count != 1)
             throw new WebSocketException(-32602, "Invalid params");
 
-        if (Guid.TryParse(_params[0].AsString(), out var sessionId))
+        if (Guid.TryParse(_params[0]!.AsString(), out var sessionId))
         {
             if (_walletSessionManager.ContainsKey(sessionId) == false)
                 throw new WebSocketException(-100, "Invalid session");

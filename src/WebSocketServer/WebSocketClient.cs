@@ -9,7 +9,7 @@ namespace Neo.Plugins
 {
     internal class WebSocketClient : IDisposable, IEquatable<WebSocketClient>
     {
-        public WebSocket Socket { get; init; }
+        public WebSocket? Socket { get; init; }
 
         public bool IsConnected =>
             Socket != null &&
@@ -25,7 +25,7 @@ namespace Neo.Plugins
         {
             if (IsConnected)
             {
-                await Socket.SendAsync(
+                await Socket!.SendAsync(
                     new(Encoding.UTF8.GetBytes(message.ToString())),
                     WebSocketMessageType.Text,
                     true,
@@ -50,13 +50,13 @@ namespace Neo.Plugins
 
         #region IEquatable
 
-        public bool Equals(WebSocketClient other) =>
+        public bool Equals(WebSocketClient? other) =>
             ReferenceEquals(Socket, other?.Socket);
 
         public override int GetHashCode() =>
             HashCode.Combine(this, Socket);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(obj, this))
                 return true;

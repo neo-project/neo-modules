@@ -9,7 +9,7 @@ namespace Neo.Plugins
         public Version Version { get; private init; } = new("1.0");
         public int RequestId { get; private init; }
         public byte EventId { get; private init; }
-        public JToken Result { get; private init; }
+        public JToken? Result { get; private init; }
 
         internal static WebSocketResponseMessage Create(int requestId, JToken result, WebSocketResponseMessageEvent eventId) =>
             new()
@@ -39,9 +39,9 @@ namespace Neo.Plugins
         public static WebSocketResponseMessage FromJson(JToken message) =>
             new()
             {
-                Version = new(message["version"].AsString()),
-                RequestId = checked((int)message["requestid"].AsNumber()),
-                EventId = (byte)message["eventid"].AsNumber(),
+                Version = message["version"] == null ? new("1.0") : new(message["version"]!.AsString()),
+                RequestId = message["requestid"] == null ? 0 : checked((int)message["requestid"]!.AsNumber()),
+                EventId = message["eventid"] == null ? (byte)0 : unchecked((byte)message["eventid"]!.AsNumber()),
                 Result = message["result"],
             };
 
@@ -51,11 +51,11 @@ namespace Neo.Plugins
         public byte[] ToArray() =>
             Encoding.UTF8.GetBytes(ToString());
 
-        public bool Equals(WebSocketResponseMessage other) =>
+        public bool Equals(WebSocketResponseMessage? other) =>
             other != null && other.EventId == EventId && other.RequestId == RequestId &&
             other.Version == Version && other.Result == Result;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(this, obj)) return true;
             return Equals(obj as WebSocketResponseMessage);

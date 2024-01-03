@@ -7,15 +7,15 @@ namespace Neo.Plugins
     public class WebSocketServerSettings
     {
         public uint Network { get; private init; }
-        public IPAddress BindAddress { get; private set; }
+        public IPAddress BindAddress { get; private set; } = IPAddress.Loopback;
         public int Port { get; private init; }
-        public string SslCertFile { get; private init; }
-        public string SslCertPassword { get; private init; }
-        public string[] TrustedAuthorities { get; private init; }
+        public string? SslCertFile { get; private init; }
+        public string? SslCertPassword { get; private init; }
+        public string[] TrustedAuthorities { get; private init; } = Array.Empty<string>();
         public bool EnableBasicAuthentication { get; private init; }
-        public string User { get; private init; }
-        public string Pass { get; private init; }
-        public string[] AllowOrigins { get; private init; }
+        public string? User { get; private init; }
+        public string? Pass { get; private init; }
+        public string[] AllowOrigins { get; private init; } = Array.Empty<string>();
         public uint ConcurrentProxyTimeout { get; private init; }
         public uint MessageSize { get; private init; }
         public long MaxGasInvoke { get; private init; }
@@ -41,7 +41,7 @@ namespace Neo.Plugins
             DebugMode = false,
         };
 
-        public static WebSocketServerSettings Current { get; private set; }
+        public static WebSocketServerSettings? Current { get; private set; }
 
         internal static void Load(IConfigurationSection section)
         {

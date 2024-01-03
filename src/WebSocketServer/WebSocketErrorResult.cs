@@ -6,9 +6,9 @@ namespace Neo.Plugins
     internal class WebSocketErrorResult
     {
         public int Code { get; init; }
-        public string Message { get; init; }
+        public string Message { get; init; } = string.Empty;
 #if DEBUG
-        public string StackTrace { get; init; }
+        public string? StackTrace { get; init; }
 #endif
 
         public static WebSocketErrorResult Create(Exception exception) =>

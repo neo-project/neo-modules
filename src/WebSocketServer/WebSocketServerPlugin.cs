@@ -24,8 +24,8 @@ namespace Neo.Plugins
     public delegate void WebSocketDisconnect(Guid clientId);
     public delegate void WebSocketRequest(HttpContext httpContext);
     public delegate void WebSocketServerStarted();
-    public delegate void WebSocketMessageReceived(Guid clientId, JToken json);
-    public delegate void WebSocketMessageSent(Guid clientId, JToken json);
+    public delegate void WebSocketMessageReceived(Guid clientId, JToken? json);
+    public delegate void WebSocketMessageSent(Guid clientId, JToken? json);
 
     public class WebSocketServerPlugin : Plugin
     {
@@ -35,19 +35,19 @@ namespace Neo.Plugins
 
         internal static readonly Dictionary<string, Func<JArray, object>> Methods;
         private static readonly WebSocketConnection<WebSocketClient> _connections;
-        public static event WebSocketRequest OnRequest;
-        public static event WebSocketServerStarted OnServerStarted;
+        public static event WebSocketRequest? OnRequest;
+        public static event WebSocketServerStarted? OnServerStarted;
 
         #endregion
 
         private readonly WebSocketOptions _webSocketOptions;
         private readonly List<NotifyEventArgs> _notifyEvents;
 
-        private BlockchainMethods blockchainMethods;
-        private NeoSystem _neoSystem;
+        private BlockchainMethods? blockchainMethods;
+        private NeoSystem? _neoSystem;
 
 
-        private IWebHost _host;
+        private IWebHost? _host;
 
         #endregion
 
@@ -86,7 +86,7 @@ namespace Neo.Plugins
             _host?.Dispose();
             _connections?.Dispose();
             if (_neoSystem != null)
-                _neoSystem.MemPool.TransactionAdded -= OnMemPoolTransactionAdded;
+                _neoSystem.MemPool.TransactionAdded -= OnMemPoolTransactionAdded!;
             Blockchain.Committing -= OnBlockchainCommitting;
             Blockchain.Committed -= OnBlockchainCommitted;
             GC.SuppressFinalize(this);
@@ -106,11 +106,11 @@ namespace Neo.Plugins
 
             if (WebSocketServerSettings.Current.DebugMode)
             {
-                ApplicationEngine.Log += OnApplicationEngineLog;
+                ApplicationEngine.Log += OnApplicationEngineLog!;
                 Utility.Logging += OnUtilityLogging;
             }
 
-            _neoSystem.MemPool.TransactionAdded += OnMemPoolTransactionAdded;
+            _neoSystem.MemPool.TransactionAdded += OnMemPoolTransactionAdded!;
             //_neoSystem.MemPool.TransactionRemoved += OnMemPoolTransactionRemoved;
 
             blockchainMethods = new BlockchainMethods(system);
@@ -130,7 +130,7 @@ namespace Neo.Plugins
                 await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
                         RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                        e.ToJson(_neoSystem.Settings),
+                        e.ToJson(_neoSystem?.Settings),
                         WebSocketResponseMessageEvent.MemoryPool)
                     .ToJson())
                 .ConfigureAwait(false));
@@ -303,9 +303,9 @@ namespace Neo.Plugins
             .UseKestrel(options =>
             {
                 options.AddServerHeader = false;
-                options.Listen(WebSocketServerSettings.Current.BindAddress, WebSocketServerSettings.Current.Port, config =>
+                options.Listen(WebSocketServerSettings.Current?.BindAddress ?? WebSocketServerSettings.Default.BindAddress, WebSocketServerSettings.Current?.Port ?? WebSocketServerSettings.Default.Port, config =>
                 {
-                    if (string.IsNullOrEmpty(WebSocketServerSettings.Current.SslCertFile))
+                    if (string.IsNullOrEmpty(WebSocketServerSettings.Current?.SslCertFile))
                         return;
                     config.UseHttps(WebSocketServerSettings.Current.SslCertFile, WebSocketServerSettings.Current.SslCertPassword, httpsConnectionAdapterOptions =>
                     {
@@ -316,8 +316,8 @@ namespace Neo.Plugins
                         {
                             if (err != SslPolicyErrors.None)
                                 return false;
-                            X509Certificate2 authority = chain.ChainElements[^1].Certificate;
-                            return WebSocketServerSettings.Current.TrustedAuthorities.Contains(authority.Thumbprint);
+                            X509Certificate2 authority = chain!.ChainElements[^1].Certificate;
+                            return WebSocketServerSettings.Current.TrustedAuthorities.Contains(authority!.Thumbprint);
                         };
                     });
                 });
@@ -328,9 +328,9 @@ namespace Neo.Plugins
             //})
             .Configure(app =>
             {
-                _webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(WebSocketServerSettings.Current.ConcurrentProxyTimeout);
+                _webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(WebSocketServerSettings.Current?.ConcurrentProxyTimeout ?? WebSocketServerSettings.Default.ConcurrentProxyTimeout);
 
-                foreach (var origin in WebSocketServerSettings.Current.AllowOrigins)
+                foreach (var origin in WebSocketServerSettings.Current?.AllowOrigins ?? WebSocketServerSettings.Default.AllowOrigins)
                     _webSocketOptions.AllowedOrigins.Add(origin);
 
                 app.UseWebSockets(_webSocketOptions);
@@ -345,7 +345,7 @@ namespace Neo.Plugins
 
         private async Task ProcessRequestsAsync(HttpContext context)
         {
-            if (WebSocketServerSettings.Current.EnableBasicAuthentication)
+            if (WebSocketServerSettings.Current?.EnableBasicAuthentication ?? WebSocketServerSettings.Default.EnableBasicAuthentication)
             {
                 if (IsAuthorized(context) == false)
                 {
@@ -383,7 +383,7 @@ namespace Neo.Plugins
                     {
                         var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
                         var creds = decodedParams.Split(':', 2);
-                        if (creds[0] == WebSocketServerSettings.Current.User && creds[1] == WebSocketServerSettings.Current.Pass)
+                        if (creds[0] == WebSocketServerSettings.Current?.User && creds[1] == WebSocketServerSettings.Current?.Pass)
                             return true;
 
                     }

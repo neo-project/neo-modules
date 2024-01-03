@@ -5,6 +5,6 @@ namespace Neo.Plugins
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     internal class WebSocketMethodAttribute : Attribute
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }
