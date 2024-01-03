@@ -65,7 +65,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromBody]
             WalletOpenModel model)
         {
-            if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+            if (AppContext.BaseDirectory.StartsWith(new FileInfo(model.Path).DirectoryName, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
             if (System.IO.File.Exists(model.Path) == false)
                 throw new FileNotFoundException(null, model.Path);
