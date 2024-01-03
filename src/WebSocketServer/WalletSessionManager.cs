@@ -20,7 +20,7 @@ namespace Neo.Plugins
         {
             while (await _timer.WaitForNextTickAsync())
             {
-                var killAll = this.Where(w => w.Value.Expires <= DateTime.Now)
+                var killAll = this.Where(w => w.Value.Expires <= DateTime.UtcNow)
                     .Select(s => Task.Run(() =>
                     {
                         TryRemove(s);

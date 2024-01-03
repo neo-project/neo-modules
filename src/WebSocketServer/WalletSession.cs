@@ -16,6 +16,6 @@ namespace Neo.Plugins
         }
 
         public void ResetExpiration() =>
-            Expires = DateTime.Now.AddSeconds(WebSocketServerSettings.Current?.WalletSessionTimeout ?? WebSocketServerSettings.Default.WalletSessionTimeout);
+            Expires = DateTime.UtcNow.AddSeconds(WebSocketServerSettings.Current?.WalletSessionTimeout ?? WebSocketServerSettings.Default.WalletSessionTimeout);
     }
 }
