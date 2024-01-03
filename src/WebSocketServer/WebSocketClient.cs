@@ -9,14 +9,15 @@ namespace Neo.Plugins
 {
     internal class WebSocketClient : IDisposable, IEquatable<WebSocketClient>
     {
-        public required WebSocket Socket { get; init; }
+        public WebSocket Socket { get; init; }
 
         public bool IsConnected =>
+            Socket != null &&
             Socket.State == WebSocketState.Open;
 
         public void Dispose()
         {
-            Socket.Dispose();
+            Socket?.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -24,7 +25,7 @@ namespace Neo.Plugins
         {
             if (IsConnected)
             {
-                await Socket.SendAsync(
+                await Socket!.SendAsync(
                     new(Encoding.UTF8.GetBytes(message.ToString())),
                     WebSocketMessageType.Text,
                     true,
@@ -34,6 +35,8 @@ namespace Neo.Plugins
 
         public async Task CloseAsync(WebSocketCloseStatus status)
         {
+            if (Socket == null)
+                return;
             switch (Socket.State)
             {
                 case WebSocketState.Connecting:
@@ -48,7 +51,7 @@ namespace Neo.Plugins
         #region IEquatable
 
         public bool Equals(WebSocketClient other) =>
-            ReferenceEquals(Socket, other.Socket);
+            ReferenceEquals(Socket, other?.Socket);
 
         public override int GetHashCode() =>
             HashCode.Combine(this, Socket);

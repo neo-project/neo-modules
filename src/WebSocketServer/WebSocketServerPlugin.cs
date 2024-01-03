@@ -34,7 +34,7 @@ namespace Neo.Plugins
         #region Static
 
         internal static readonly Dictionary<string, Func<JArray, object>> Methods;
-        private static readonly WebSocketConnection _connections;
+        private static readonly WebSocketConnection<WebSocketClient> _connections;
         public static event WebSocketRequest OnRequest;
         public static event WebSocketServerStarted OnServerStarted;
 
