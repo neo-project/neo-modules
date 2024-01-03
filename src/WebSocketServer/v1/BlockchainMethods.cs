@@ -198,7 +198,7 @@ namespace Neo.Plugins.WebSocketServer.v1
 
             try
             {
-                if (_params.Count >= 1 && UInt160.TryParse(_params[0]?.AsString(), out scriptHash))
+                if (_params.Count >= 1 && UInt160.TryParse(_params[0]!.AsString(), out scriptHash))
                 {
                     if (_params.Count >= 2)
                     {
