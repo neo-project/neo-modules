@@ -9,14 +9,15 @@ namespace Neo.Plugins
 {
     internal class WebSocketClient : IDisposable, IEquatable<WebSocketClient>
     {
-        public required WebSocket Socket { get; init; }
+        public WebSocket Socket { get; init; }
 
         public bool IsConnected =>
+            Socket != null &&
             Socket.State == WebSocketState.Open;
 
         public void Dispose()
         {
-            Socket.Dispose();
+            Socket?.Dispose();
             GC.SuppressFinalize(this);
         }
 
