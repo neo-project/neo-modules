@@ -13,10 +13,9 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    internal class WebSocketConnection<TClient> : IDictionary<Guid, TClient>, IDisposable
-        where TClient : WebSocketClient, new()
+    internal class WebSocketConnection: IDictionary<Guid, WebSocketClient>, IDisposable
     {
-        private readonly ConcurrentDictionary<Guid, TClient> _clients;
+        private readonly ConcurrentDictionary<Guid, WebSocketClient> _clients;
 
         public static event WebSocketMessageSent OnMessageSent;
         public static event WebSocketMessageReceived OnMessageReceived;
@@ -53,7 +52,7 @@ namespace Neo.Plugins
             await Task.WhenAll(sendTaskList).ConfigureAwait(false);
         }
 
-        public async Task<bool> TryAddAsync(Guid clientId, TClient client)
+        public async Task<bool> TryAddAsync(Guid clientId, WebSocketClient client)
         {
             if (_clients.TryAdd(clientId, client) == false)
             {
@@ -113,7 +112,7 @@ namespace Neo.Plugins
             try
             {
                 var clientId = Guid.NewGuid();
-                _ = await TryAddAsync(clientId, new TClient { Socket = client });
+                _ = await TryAddAsync(clientId, new WebSocketClient { Socket = client });
 
                 while (client.CloseStatus.HasValue == false)
                 {
@@ -160,7 +159,7 @@ namespace Neo.Plugins
             }
         }
 
-        private async Task SendJsonAndCleanUpAsync(KeyValuePair<Guid, TClient> kvp, JToken message)
+        private async Task SendJsonAndCleanUpAsync(KeyValuePair<Guid, WebSocketClient> kvp, JToken message)
         {
             if (kvp.Value.IsConnected)
             {
@@ -204,25 +203,25 @@ namespace Neo.Plugins
 
         public ICollection<Guid> Keys => _clients.Keys;
 
-        public ICollection<TClient> Values => _clients.Values;
+        public ICollection<WebSocketClient> Values => _clients.Values;
 
         public int Count => _clients.Count;
 
         public virtual bool IsReadOnly => false;
 
-        public TClient this[Guid key]
+        public WebSocketClient this[Guid key]
         {
             get => _clients[key];
             set => Add(key, value);
         }
 
-        public void Add(Guid clientId, TClient client)
+        public void Add(Guid clientId, WebSocketClient client)
         {
             if (_clients.TryAdd(clientId, client))
                 OnConnect?.TryCatch(t => t.Invoke(clientId));
         }
 
-        public void Add(KeyValuePair<Guid, TClient> client)
+        public void Add(KeyValuePair<Guid, WebSocketClient> client)
         {
             if (_clients.TryAdd(client.Key, client.Value))
                 OnConnect?.TryCatch(t => t.Invoke(client.Key));
@@ -238,7 +237,7 @@ namespace Neo.Plugins
             return false;
         }
 
-        public bool Remove(KeyValuePair<Guid, TClient> client)
+        public bool Remove(KeyValuePair<Guid, WebSocketClient> client)
         {
             if (_clients.TryRemove(client.Key, out var socket) && ReferenceEquals(client.Value, socket))
             {
@@ -248,7 +247,7 @@ namespace Neo.Plugins
             return false;
         }
 
-        public bool TryGetValue(Guid clientId, [MaybeNullWhen(false)] out TClient client) =>
+        public bool TryGetValue(Guid clientId, [MaybeNullWhen(false)] out WebSocketClient client) =>
             _clients.TryGetValue(clientId, out client);
 
         public void Clear() =>
@@ -257,13 +256,13 @@ namespace Neo.Plugins
         public bool ContainsKey(Guid clientId) =>
             _clients.ContainsKey(clientId);
 
-        public bool Contains(KeyValuePair<Guid, TClient> client) =>
+        public bool Contains(KeyValuePair<Guid, WebSocketClient> client) =>
             _clients.Contains(client);
 
-        public virtual void CopyTo(KeyValuePair<Guid, TClient>[] array, int arrayIndex) =>
+        public virtual void CopyTo(KeyValuePair<Guid, WebSocketClient>[] array, int arrayIndex) =>
             throw new NotImplementedException();
 
-        public IEnumerator<KeyValuePair<Guid, TClient>> GetEnumerator() =>
+        public IEnumerator<KeyValuePair<Guid, WebSocketClient>> GetEnumerator() =>
             _clients.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() =>
