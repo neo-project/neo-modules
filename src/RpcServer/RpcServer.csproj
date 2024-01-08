@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.RpcServer</PackageId>
-    <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>

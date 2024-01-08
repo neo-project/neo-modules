@@ -69,7 +69,6 @@ namespace Neo.Plugins
         {
             JObject json = new();
             json["tcpport"] = localNode.ListenerTcpPort;
-            json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
             json["protocol"] = new JObject();

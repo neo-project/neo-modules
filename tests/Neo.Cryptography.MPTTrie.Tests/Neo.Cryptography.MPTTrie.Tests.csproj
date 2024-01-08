@@ -1,16 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <RootNamespace>Neo.Cryptography.MPT.Tests</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\MPTTrie\MPTTrie.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Update="MSTest.TestAdapter" Version="3.1.1" />
-    <PackageReference Update="MSTest.TestFramework" Version="3.1.1" />
   </ItemGroup>
 </Project>
