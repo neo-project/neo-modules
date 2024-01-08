@@ -27,7 +27,5 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }
-
-
     }
 }
