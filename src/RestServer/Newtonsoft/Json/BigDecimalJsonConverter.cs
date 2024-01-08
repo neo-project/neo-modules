@@ -22,16 +22,27 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override BigDecimal ReadJson(JsonReader reader, Type objectType, BigDecimal existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
-            if (token.Type == JTokenType.Object)
-            {
-                var valueProp = ((JObject)token).Properties().SingleOrDefault(p => p.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
-                var decimalsProp = ((JObject)token).Properties().SingleOrDefault(p => p.Name.Equals("decimals", StringComparison.InvariantCultureIgnoreCase));
 
-                if (valueProp != null && decimalsProp != null)
-                {
-                    return new BigDecimal(valueProp.ToObject<BigInteger>(), decimalsProp.ToObject<byte>());
-                }
+            switch (token.Type)
+            {
+                case JTokenType.Object:
+                    {
+                        var jobj = (JObject)token;
+                        var valueProp = jobj.Properties().SingleOrDefault(p => p.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+                        var decimalsProp = jobj.Properties().SingleOrDefault(p => p.Name.Equals("decimals", StringComparison.InvariantCultureIgnoreCase));
+
+                        if (valueProp != null && decimalsProp != null)
+                        {
+                            return new BigDecimal(valueProp.ToObject<BigInteger>(), decimalsProp.ToObject<byte>());
+                        }
+                        break;
+                    }
+                case JTokenType.Float:
+                    {
+                        return new BigDecimal((decimal)((JValue)token).Value);
+                    }
             }
+
             throw new FormatException();
         }
 
