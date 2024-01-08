@@ -47,7 +47,7 @@ namespace Neo.Plugins.RestServer
         {
             if (Guid.TryParse(sessionId, out var session) == false)
             {
-                if (sessionId == "all")
+                if (sessionId.Equals("all", StringComparison.CurrentCultureIgnoreCase))
                 {
                     OnKillallWalletSessions();
                 }
