@@ -40,7 +40,8 @@ namespace RestServer.Authentication
                     {
                         var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
                         var creds = decodedParams.Split(':', 2);
-                        if (creds[0] == RestServerSettings.Current.RestUser && creds[1] == RestServerSettings.Current.RestPass)
+
+                        if (creds.Length == 2 && creds[0] == RestServerSettings.Current.RestUser && creds[1] == RestServerSettings.Current.RestPass)
                         {
                             var claims = new[] { new Claim(ClaimTypes.NameIdentifier, creds[0]) };
                             var identity = new ClaimsIdentity(claims, Scheme.Name);
@@ -49,7 +50,6 @@ namespace RestServer.Authentication
 
                             return Task.FromResult(AuthenticateResult.Success(ticket));
                         }
-
                     }
                     catch (FormatException)
                     {

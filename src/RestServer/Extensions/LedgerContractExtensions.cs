@@ -52,10 +52,10 @@ namespace Neo.Plugins.RestServer.Extensions
         {
             ArgumentNullException.ThrowIfNull(nameof(contractState));
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            return ListContractStorage(null, snapshot, contractState.Id);
+            return ListContractStorage(snapshot, contractState.Id);
         }
 
-        public static IEnumerable<(StorageKey key, StorageItem value)> ListContractStorage(this ContractManagement contractManagement, DataCache snapshot, int contractId)
+        public static IEnumerable<(StorageKey key, StorageItem value)> ListContractStorage(DataCache snapshot, int contractId)
         {
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
             if (contractId < 0)
@@ -67,7 +67,7 @@ namespace Neo.Plugins.RestServer.Extensions
         public static IEnumerable<TrimmedBlock> ListBlocks(this LedgerContract ledger, DataCache snapshot)
         {
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            var kb = new KeyBuilder(NativeContract.Ledger.Id, _prefix_block);
+            var kb = new KeyBuilder(ledger.Id, _prefix_block);
             var prefixKey = kb.ToArray();
             foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))
                 if (key.ToArray().AsSpan().StartsWith(prefixKey))
@@ -79,7 +79,7 @@ namespace Neo.Plugins.RestServer.Extensions
         public static IEnumerable<TransactionState> ListTransactions(this LedgerContract ledger, DataCache snapshot, uint page, uint pageSize)
         {
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            var kb = new KeyBuilder(NativeContract.Ledger.Id, _prefix_transaction);
+            var kb = new KeyBuilder(ledger.Id, _prefix_transaction);
             var prefixKey = kb.ToArray();
             uint index = 1;
             foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))

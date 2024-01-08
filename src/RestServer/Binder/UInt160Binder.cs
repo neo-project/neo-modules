@@ -14,7 +14,6 @@ namespace Neo.Plugins.RestServer.Binder
 {
     internal class UInt160Binder : IModelBinder
     {
-
         public Task BindModelAsync(ModelBindingContext bindingContext)
         {
             _ = bindingContext ?? throw new ArgumentNullException(nameof(bindingContext));
