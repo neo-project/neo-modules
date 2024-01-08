@@ -139,6 +139,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                 throw new ContractNotFoundException(scripthash);
             return Ok(contracts.Manifest.Abi);
         }
+
         /// <summary>
         /// Get manifest of a smart contract.
         /// </summary>
@@ -157,6 +158,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                 throw new ContractNotFoundException(scripthash);
             return Ok(contracts.Manifest);
         }
+
         /// <summary>
         /// Get nef of a smart contract.
         /// </summary>

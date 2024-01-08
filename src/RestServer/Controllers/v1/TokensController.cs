@@ -61,7 +61,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                 throw new InvalidParameterRangeException();
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             var vaildContracts = tokenList
-                .Where(w => ContractHelper.IsNep17Supported(w))
+                .Where(ContractHelper.IsNep17Supported)
                 .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
@@ -96,7 +96,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
         {
             return Ok(new CountModel()
             {
-                Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep17Supported(c))
+                Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(ContractHelper.IsNep17Supported)
             });
         }
 
@@ -167,7 +167,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             var vaildContracts = tokenList
                 .Where(ContractHelper.IsNep11Supported)
-            .OrderBy(o => o.Manifest.Name)
+                .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
             if (vaildContracts.Any() == false)
@@ -199,7 +199,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
         public IActionResult GetNEP11Count()
         {
-            return Ok(new CountModel() { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
+            return Ok(new CountModel() { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(ContractHelper.IsNep11Supported) });
         }
 
         /// <summary>
