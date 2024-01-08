@@ -27,7 +27,7 @@ namespace Neo.Plugins.RestServer
         {
             while (await _timer.WaitForNextTickAsync())
             {
-                var killAll = this.Where(w => w.Value.Expires <= DateTime.Now)
+                var killAll = this.Where(w => w.Value.Expires <= DateTime.UtcNow)
                     .Select(s => Task.Run(() =>
                     {
                         TryRemove(s);
@@ -40,6 +40,10 @@ namespace Neo.Plugins.RestServer
     public class WalletSession
     {
         public Wallet Wallet { get; private init; }
+
+        /// <summary>
+        /// Expiration DateTime in UTC
+        /// </summary>
         public DateTime Expires { get; private set; }
 
         public WalletSession(Wallet wallet)
@@ -49,6 +53,6 @@ namespace Neo.Plugins.RestServer
         }
 
         public void ResetExpiration() =>
-            Expires = DateTime.Now.AddSeconds(RestServerSettings.Current.WalletSessionTimeout);
+            Expires = DateTime.UtcNow.AddSeconds(RestServerSettings.Current.WalletSessionTimeout);
     }
 }
