@@ -19,7 +19,6 @@ namespace Neo.Plugins.RestServer
         [ConsoleCommand("rest sessions", Category = "RestServer Commands", Description = "Shows all active wallet sessions.")]
         private void OnShowWalletSessions()
         {
-
             if (WalletController.WalletSessions.Any())
                 ConsoleHelper.Info("---------", "Sessions", "---------");
 
@@ -48,7 +47,14 @@ namespace Neo.Plugins.RestServer
         {
             if (Guid.TryParse(sessionId, out var session) == false)
             {
-                ConsoleHelper.Warning("Invalid session id.");
+                if (sessionId == "all")
+                {
+                    OnKillallWalletSessions();
+                }
+                else
+                {
+                    ConsoleHelper.Warning("Invalid session id.");
+                }
                 return;
             }
 
@@ -85,7 +91,7 @@ namespace Neo.Plugins.RestServer
             }
         }
 
-        private string ReadUserInput(string prompt, bool password = false)
+        private static string ReadUserInput(string prompt, bool password = false)
         {
             const string t = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
             var sb = new StringBuilder();
