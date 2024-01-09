@@ -10,7 +10,6 @@
 
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.RestServer.Exceptions;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
