@@ -22,14 +22,14 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>Default Account</example>
         /// <remarks>Can be null.</remarks>
-        public string Name { get; set; }=string.Empty;
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Path of the wallet file relative to the neo-cli path.
         /// </summary>
         /// <example>./wallets/mywallet.json</example>
         [Required(AllowEmptyStrings = false)]
-        public string Path { get; set; }= string.Empty;
+        public string Path { get; set; } = string.Empty;
 
         /// <summary>
         /// Representation of the private.
