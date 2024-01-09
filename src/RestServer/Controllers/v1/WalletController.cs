@@ -65,13 +65,14 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromBody]
             WalletOpenModel model)
         {
-            string path = Path.GetDirectoryName(Path.GetFullPath(model.Path)) ??
+            string path = Path.GetFullPath(model.Path);
+            string dir = Path.GetDirectoryName(path) ??
                 throw new FormatException(nameof(model.Path));
-            if (AppContext.BaseDirectory.StartsWith(path, StringComparison.InvariantCultureIgnoreCase) == false)
-                throw new UnauthorizedAccessException(model.Path);
-            if (System.IO.File.Exists(model.Path) == false)
-                throw new FileNotFoundException(null, model.Path);
-            var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings)
+            if (AppContext.BaseDirectory.StartsWith(dir, StringComparison.InvariantCultureIgnoreCase) == false)
+                throw new UnauthorizedAccessException(path);
+            if (System.IO.File.Exists(path) == false)
+                throw new FileNotFoundException(null, path);
+            var wallet = Wallet.Open(path, model.Password, _neosystem.Settings)
                 ?? throw new WalletOpenException($"File '{model.Path}' could not be opened.");
             var sessionId = Guid.NewGuid();
             WalletSessions[sessionId] = new WalletSession(wallet);
@@ -458,12 +459,13 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromBody]
             WalletCreateModel model)
         {
-            string path = Path.GetDirectoryName(Path.GetFullPath(model.Path)) ??
+            string path = Path.GetFullPath(model.Path);
+            string dir = Path.GetDirectoryName(path) ??
                 throw new FormatException(nameof(model.Path));
 
-            if (path.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+            if (dir.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
-            var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings) ??
+            var wallet = Wallet.Create(model.Name, path, model.Password, _neosystem.Settings) ??
                 throw new WalletException("Wallet files in that format are not supported, please use a .json or .db3 file extension.");
             if (string.IsNullOrEmpty(model.Wif) == false)
                 wallet.Import(model.Wif);
