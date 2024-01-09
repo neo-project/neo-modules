@@ -19,18 +19,21 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>Password1!</example>
         [Required(AllowEmptyStrings = false)]
-        public string OldPassword { get; set; }
+        public string OldPassword { get; set; } = string.Empty;
+
         /// <summary>
         /// New Password.
         /// </summary>
         /// <example>HelloWorld1!</example>
         [Required(AllowEmptyStrings = false)]
-        public string NewPassword { get; set; }
+        public string NewPassword { get; set; } = string.Empty;
+
         /// <summary>
         /// Should create a backup file.
         /// </summary>
         /// <example>false</example>
         public bool CreateBackupFile { get; set; }
+
         /// <summary>
         /// if backup file exists overwrite it.
         /// </summary>

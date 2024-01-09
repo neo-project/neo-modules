@@ -19,9 +19,11 @@ public class ContractJsonConverter : JsonConverter<ContractState>
 
     public override bool CanWrite => true;
 
-    public override ContractState ReadJson(JsonReader reader, Type objectType, ContractState existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractState value, global::Newtonsoft.Json.JsonSerializer serializer)
+    public override ContractState ReadJson(JsonReader reader, Type objectType, ContractState? existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractState? value, global::Newtonsoft.Json.JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractStateToJToken(value, serializer);
         j.WriteTo(writer);
     }

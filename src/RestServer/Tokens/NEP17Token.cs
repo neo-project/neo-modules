@@ -20,8 +20,8 @@ namespace Neo.Plugins.RestServer.Tokens
     internal class NEP17Token
     {
         public UInt160 ScriptHash { get; private init; }
-        public string Name { get; private init; }
-        public string Symbol { get; private init; }
+        public string Name { get; private init; } = string.Empty;
+        public string Symbol { get; private init; } = string.Empty;
         public byte Decimals { get; private init; }
 
         private readonly NeoSystem _neosystem;
@@ -30,7 +30,7 @@ namespace Neo.Plugins.RestServer.Tokens
         public NEP17Token(
             NeoSystem neoSystem,
             UInt160 scriptHash,
-            DataCache snapshot = null)
+            DataCache? snapshot = null)
         {
             _datacache = snapshot ?? neoSystem.GetSnapshot();
             var contractState = NativeContract.ContractManagement.GetContract(_datacache, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
@@ -50,7 +50,7 @@ namespace Neo.Plugins.RestServer.Tokens
             _neosystem = neoSystem;
             ScriptHash = scriptHash;
             Name = contractState.Manifest.Name;
-            Symbol = engine.ResultStack.Pop().GetString();
+            Symbol = engine.ResultStack.Pop().GetString() ?? string.Empty;
             Decimals = (byte)engine.ResultStack.Pop().GetInteger();
         }
 

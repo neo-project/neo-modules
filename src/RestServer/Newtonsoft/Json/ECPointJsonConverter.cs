@@ -16,21 +16,23 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class ECPointJsonConverter : JsonConverter<ECPoint>
     {
-        public override ECPoint ReadJson(JsonReader reader, Type objectType, ECPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override ECPoint ReadJson(JsonReader reader, Type objectType, ECPoint? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var value = reader?.Value.ToString();
+            var value = reader?.Value?.ToString();
             try
             {
                 return ECPoint.Parse(value, ECCurve.Secp256r1);
             }
             catch (FormatException)
             {
-                throw new UInt256FormatException($"{value} is invalid.");
+                throw new UInt256FormatException($"'{value}' is invalid.");
             }
         }
 
-        public override void WriteJson(JsonWriter writer, ECPoint value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, ECPoint? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             writer.WriteValue(value.ToString());
         }
     }

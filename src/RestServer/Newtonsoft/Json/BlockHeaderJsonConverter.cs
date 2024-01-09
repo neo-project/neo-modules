@@ -18,13 +18,15 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override bool CanRead => false;
         public override bool CanWrite => true;
 
-        public override Header ReadJson(JsonReader reader, Type objectType, Header existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Header ReadJson(JsonReader reader, Type objectType, Header? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
-        public override void WriteJson(JsonWriter writer, Header value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Header? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var j = RestServerUtility.BlockHeaderToJToken(value, serializer);
             j.WriteTo(writer);
         }

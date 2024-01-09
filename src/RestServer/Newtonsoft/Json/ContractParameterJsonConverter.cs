@@ -19,13 +19,13 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override bool CanRead => true;
         public override bool CanWrite => false;
 
-        public override ContractParameter ReadJson(JsonReader reader, Type objectType, ContractParameter existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override ContractParameter ReadJson(JsonReader reader, Type objectType, ContractParameter? existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
             return RestServerUtility.ContractParameterFromJToken(token);
         }
 
-        public override void WriteJson(JsonWriter writer, ContractParameter value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, ContractParameter? value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }

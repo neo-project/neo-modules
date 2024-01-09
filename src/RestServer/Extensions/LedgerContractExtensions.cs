@@ -15,8 +15,6 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 
-#pragma warning disable IDE0060
-
 namespace Neo.Plugins.RestServer.Extensions
 {
     internal static class LedgerContractExtensions
@@ -24,7 +22,7 @@ namespace Neo.Plugins.RestServer.Extensions
         private const byte _prefix_block = 5;
         private const byte _prefix_transaction = 11;
         private const byte _prefix_account = 20;
-        private const byte _prefix_totalsupply = 11;
+        //private const byte _prefix_totalsupply = 11;
 
         public static IEnumerable<(StorageKey key, StorageItem value)> GetStorageByPrefix(this ContractState contractState, DataCache snapshot, byte[] prefix)
         {
@@ -36,7 +34,7 @@ namespace Neo.Plugins.RestServer.Extensions
                 yield return (key, value);
         }
 
-        public static StorageItem GetStorageByKey(this ContractState contractState, DataCache snapshot, byte[] storageKey)
+        public static StorageItem? GetStorageByKey(this ContractState contractState, DataCache snapshot, byte[] storageKey)
         {
             ArgumentNullException.ThrowIfNull(nameof(contractState));
             ArgumentNullException.ThrowIfNull(nameof(snapshot));

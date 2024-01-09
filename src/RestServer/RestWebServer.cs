@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -46,7 +47,7 @@ namespace Neo.Plugins.RestServer
         #region Globals
 
         private readonly RestServerSettings _settings;
-        private IWebHost _host;
+        private IWebHost? _host;
 
         #endregion
 
@@ -84,7 +85,7 @@ namespace Neo.Plugins.RestServer
                                     httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                                     httpsOptions.ClientCertificateValidation = (cert, chain, err) =>
                                     {
-                                        if (err != SslPolicyErrors.None)
+                                        if (chain is null || err != SslPolicyErrors.None)
                                             return false;
                                         var authority = chain.ChainElements[^1].Certificate;
                                         return _settings.TrustedAuthorities.Any(a => a.Equals(authority.Thumbprint, StringComparison.OrdinalIgnoreCase));
@@ -334,7 +335,7 @@ namespace Neo.Plugins.RestServer
                             });
                             foreach (var plugin in Plugin.Plugins)
                             {
-                                var assemblyName = plugin.GetType().Assembly.GetName().Name;
+                                var assemblyName = plugin.GetType().Assembly.GetName().Name ?? nameof(RestServer);
                                 var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", assemblyName, $"{assemblyName}.xml");
                                 if (File.Exists(xmlPathAndFilename))
                                     options.IncludeXmlComments(xmlPathAndFilename);
@@ -381,7 +382,7 @@ namespace Neo.Plugins.RestServer
                         config.Run(async context =>
                         {
                             var exception = context.Features
-                                .Get<IExceptionHandlerPathFeature>()
+                                .GetRequiredFeature<IExceptionHandlerPathFeature>()
                                 .Error;
                             var response = new ErrorModel()
                             {

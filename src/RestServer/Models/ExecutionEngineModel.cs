@@ -21,7 +21,7 @@ namespace Neo.Plugins.RestServer.Models
         public VMState State { get; set; } = VMState.NONE;
         public BlockchainEventModel[] Notifications { get; set; } = System.Array.Empty<BlockchainEventModel>();
         public StackItem[] ResultStack { get; set; } = System.Array.Empty<StackItem>();
-        public ErrorModel FaultException { get; set; }
+        public ErrorModel? FaultException { get; set; }
     }
 
     internal class BlockchainEventModel

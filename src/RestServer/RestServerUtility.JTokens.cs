@@ -135,7 +135,7 @@ namespace Neo.Plugins.RestServer
             switch (condition.Type)
             {
                 case WitnessConditionType.Boolean:
-                    var b = condition as BooleanCondition;
+                    var b = (BooleanCondition)condition;
                     j = JToken.FromObject(new
                     {
                         b.Type,
@@ -143,7 +143,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.Not:
-                    var n = condition as NotCondition;
+                    var n = (NotCondition)condition;
                     j = JToken.FromObject(new
                     {
                         n.Type,
@@ -151,7 +151,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.And:
-                    var a = condition as AndCondition;
+                    var a = (AndCondition)condition;
                     j = JToken.FromObject(new
                     {
                         a.Type,
@@ -159,7 +159,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.Or:
-                    var o = condition as OrCondition;
+                    var o = (OrCondition)condition;
                     j = JToken.FromObject(new
                     {
                         o.Type,
@@ -167,7 +167,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.ScriptHash:
-                    var s = condition as ScriptHashCondition;
+                    var s = (ScriptHashCondition)condition;
                     j = JToken.FromObject(new
                     {
                         s.Type,
@@ -175,7 +175,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.Group:
-                    var g = condition as GroupCondition;
+                    var g = (GroupCondition)condition;
                     j = JToken.FromObject(new
                     {
                         g.Type,
@@ -183,14 +183,14 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.CalledByEntry:
-                    var e = condition as CalledByEntryCondition;
+                    var e = (CalledByEntryCondition)condition;
                     j = JToken.FromObject(new
                     {
                         e.Type,
                     }, serializer);
                     break;
                 case WitnessConditionType.CalledByContract:
-                    var c = condition as CalledByContractCondition;
+                    var c = (CalledByContractCondition)condition;
                     j = JToken.FromObject(new
                     {
                         c.Type,
@@ -198,7 +198,7 @@ namespace Neo.Plugins.RestServer
                     }, serializer);
                     break;
                 case WitnessConditionType.CalledByGroup:
-                    var p = condition as CalledByGroupCondition;
+                    var p = (CalledByGroupCondition)condition;
                     j = JToken.FromObject(new
                     {
                         p.Type,
@@ -231,7 +231,7 @@ namespace Neo.Plugins.RestServer
                 Trusts = manifest.Trusts.Select(s => ContractPermissionDescriptorToJToken(s, serializer)),
                 manifest.SupportedStandards,
                 Extra = manifest.Extra?.Count > 0 ?
-                    new JObject(manifest.Extra.Properties.Select(s => new JProperty(s.Key.ToString(), s.Value.AsString()))) :
+                    new JObject(manifest.Extra.Properties.Select(s => new JProperty(s.Key.ToString(), s.Value?.AsString()))) :
                     null,
             }, serializer);
 

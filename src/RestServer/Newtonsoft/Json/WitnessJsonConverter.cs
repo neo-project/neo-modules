@@ -19,13 +19,15 @@ public class WitnessJsonConverter : JsonConverter<Witness>
 
     public override bool CanWrite => true;
 
-    public override Witness ReadJson(JsonReader reader, Type objectType, Witness existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override Witness ReadJson(JsonReader reader, Type objectType, Witness? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
 
-    public override void WriteJson(JsonWriter writer, Witness value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, Witness? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.WitnessToJToken(value, serializer);
         j.WriteTo(writer);
     }

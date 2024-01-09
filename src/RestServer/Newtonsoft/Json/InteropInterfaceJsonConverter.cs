@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class InteropInterfaceJsonConverter : JsonConverter<InteropInterface>
     {
-        public override InteropInterface ReadJson(JsonReader reader, Type objectType, InteropInterface existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override InteropInterface ReadJson(JsonReader reader, Type objectType, InteropInterface? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.Load(reader);
-            return RestServerUtility.StackItemFromJToken(t) as InteropInterface;
+            if (RestServerUtility.StackItemFromJToken(t) is InteropInterface iface) return iface;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, InteropInterface value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, InteropInterface? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

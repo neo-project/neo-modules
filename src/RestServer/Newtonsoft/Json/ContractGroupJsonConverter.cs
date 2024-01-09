@@ -19,9 +19,11 @@ public class ContractGroupJsonConverter : JsonConverter<ContractGroup>
 
     public override bool CanWrite => true;
 
-    public override ContractGroup ReadJson(JsonReader reader, Type objectType, ContractGroup existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractGroup value, JsonSerializer serializer)
+    public override ContractGroup ReadJson(JsonReader reader, Type objectType, ContractGroup? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractGroup? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractGroupToJToken(value, serializer);
         j.WriteTo(writer);
     }

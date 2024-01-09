@@ -19,6 +19,6 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Wif format Private key of the address you want to create. Can be null or empty.
         /// </summary>
         /// <example>L4EtTnAypiur9UahCn43fpAexTM2ww4BhsPghqvc77rec6bfYwHc</example>
-        public string Wif { get; set; }
+        public string Wif { get; set; } = string.Empty;
     }
 }

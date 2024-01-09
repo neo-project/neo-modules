@@ -18,7 +18,10 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override ReadOnlyMemory<byte> ReadJson(JsonReader reader, Type objectType, ReadOnlyMemory<byte> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var o = JToken.Load(reader);
-            return Convert.FromBase64String(o.ToObject<string>());
+            var value = o.ToObject<string>();
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
+            return Convert.FromBase64String(value);
         }
 
         public override void WriteJson(JsonWriter writer, ReadOnlyMemory<byte> value, JsonSerializer serializer)

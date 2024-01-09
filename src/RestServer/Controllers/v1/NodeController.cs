@@ -33,8 +33,8 @@ namespace Neo.Plugins.RestServer.Controllers.v1
 
         public NodeController()
         {
-            _neolocalnode = RestServerPlugin.LocalNode;
-            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
+            _neolocalnode = RestServerPlugin.LocalNode ?? throw new InvalidOperationException();
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new InvalidOperationException();
         }
 
         /// <summary>

@@ -16,16 +16,19 @@ namespace Neo.Plugins.RestServer.Models.Node
         /// Name
         /// </summary>
         /// <example>RestServer</example>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
+
         /// <summary>
         /// Version
         /// </summary>
         /// <example>3.5.0</example>
-        public string Version { get; set; }
+
+        public string Version { get; set; } = string.Empty;
+
         /// <summary>
         /// Description
         /// </summary>
         /// <example>Enables REST Web Sevices for the node</example>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

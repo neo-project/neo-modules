@@ -116,8 +116,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromRoute(Name = "address")]
             UInt160 lookupAddressOrScripthash)
         {
-            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, tokenAddessOrScripthash);
-            if (contract == null)
+            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, tokenAddessOrScripthash) ??
                 throw new ContractNotFoundException(tokenAddessOrScripthash);
             if (ContractHelper.IsNep17Supported(contract) == false)
                 throw new Nep17NotSupportedException(tokenAddessOrScripthash);
@@ -218,8 +217,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromRoute(Name = "address")]
             UInt160 addressHash)
         {
-            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, sAddressHash);
-            if (contract == null)
+            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, sAddressHash) ??
                 throw new ContractNotFoundException(sAddressHash);
             if (ContractHelper.IsNep11Supported(contract) == false)
                 throw new Nep11NotSupportedException(sAddressHash);

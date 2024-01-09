@@ -16,6 +16,6 @@ namespace Neo.Plugins.RestServer.Models.Utils
         /// Scripthash of the wallet account exported.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
-        public UInt160 ScriptHash { get; set; }
+        public UInt160 ScriptHash { get; set; } = UInt160.Zero;
     }
 }

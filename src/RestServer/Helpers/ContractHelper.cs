@@ -17,7 +17,7 @@ namespace Neo.Plugins.RestServer.Helpers
 {
     public static class ContractHelper
     {
-        public static ContractParameterDefinition[] GetAbiEventParams(DataCache snapshot, UInt160 scriptHash, string eventName)
+        public static ContractParameterDefinition[]? GetAbiEventParams(DataCache snapshot, UInt160 scriptHash, string eventName)
         {
             var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
             if (contractState == null)
@@ -47,7 +47,7 @@ namespace Neo.Plugins.RestServer.Helpers
         public static bool IsNep11Supported(ContractState contractState) =>
             contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-11"));
 
-        public static ContractMethodDescriptor GetContractMethod(DataCache snapshot, UInt160 scriptHash, string method, int pCount)
+        public static ContractMethodDescriptor? GetContractMethod(DataCache snapshot, UInt160 scriptHash, string method, int pCount)
         {
             var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
             if (contractState == null)

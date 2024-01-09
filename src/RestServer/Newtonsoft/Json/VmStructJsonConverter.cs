@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class VmStructJsonConverter : JsonConverter<Struct>
     {
-        public override Struct ReadJson(JsonReader reader, Type objectType, Struct existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Struct ReadJson(JsonReader reader, Type objectType, Struct? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.Load(reader);
-            return RestServerUtility.StackItemFromJToken(t) as Struct;
+            if (RestServerUtility.StackItemFromJToken(t) is Struct s) return s;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, Struct value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Struct? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

@@ -22,6 +22,6 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>L3tgppXLgdaeqSGSFw1Go3skBiy8vQAM7YMXvTHsKQtE16PBncSU</example>
         [Required(AllowEmptyStrings = false)]
-        public string Wif { get; set; }
+        public string Wif { get; set; } = string.Empty;
     }
 }

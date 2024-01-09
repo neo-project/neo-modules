@@ -37,9 +37,9 @@ namespace Neo.Plugins.RestServer.Extensions
                     null :
                     new ErrorModel()
                     {
-                        Code = ae.FaultException?.InnerException?.HResult ?? ae.FaultException.HResult,
-                        Name = ae.FaultException?.InnerException?.GetType().Name ?? ae.FaultException?.GetType().Name,
-                        Message = ae.FaultException?.InnerException?.Message ?? ae.FaultException?.Message,
+                        Code = ae.FaultException?.InnerException?.HResult ?? ae.FaultException?.HResult ?? -1,
+                        Name = ae.FaultException?.InnerException?.GetType().Name ?? ae.FaultException?.GetType().Name ?? string.Empty,
+                        Message = ae.FaultException?.InnerException?.Message ?? ae.FaultException?.Message ?? string.Empty,
                     },
             };
 

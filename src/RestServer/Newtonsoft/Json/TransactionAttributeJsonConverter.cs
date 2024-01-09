@@ -19,9 +19,11 @@ public class TransactionAttributeJsonConverter : JsonConverter<TransactionAttrib
 
     public override bool CanWrite => true;
 
-    public override TransactionAttribute ReadJson(JsonReader reader, Type objectType, TransactionAttribute existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, TransactionAttribute value, JsonSerializer serializer)
+    public override TransactionAttribute ReadJson(JsonReader reader, Type objectType, TransactionAttribute? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, TransactionAttribute? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.TransactionAttributeToJToken(value, serializer);
         j.WriteTo(writer);
     }

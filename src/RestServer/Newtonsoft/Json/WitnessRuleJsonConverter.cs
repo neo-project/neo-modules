@@ -15,9 +15,11 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json;
 
 public class WitnessRuleJsonConverter : JsonConverter<WitnessRule>
 {
-    public override WitnessRule ReadJson(JsonReader reader, Type objectType, WitnessRule existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, WitnessRule value, JsonSerializer serializer)
+    public override WitnessRule ReadJson(JsonReader reader, Type objectType, WitnessRule? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, WitnessRule? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.WitnessRuleToJToken(value, serializer);
         j.WriteTo(writer);
     }

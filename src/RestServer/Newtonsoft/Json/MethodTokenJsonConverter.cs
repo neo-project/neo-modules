@@ -19,9 +19,11 @@ public class MethodTokenJsonConverter : JsonConverter<MethodToken>
 
     public override bool CanWrite => true;
 
-    public override MethodToken ReadJson(JsonReader reader, Type objectType, MethodToken existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, MethodToken value, global::Newtonsoft.Json.JsonSerializer serializer)
+    public override MethodToken ReadJson(JsonReader reader, Type objectType, MethodToken? existingValue, bool hasExistingValue, global::Newtonsoft.Json.JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, MethodToken? value, global::Newtonsoft.Json.JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.MethodTokenToJToken(value, serializer);
         j.WriteTo(writer);
     }

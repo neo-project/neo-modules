@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class VmBooleanJsonConverter : JsonConverter<Boolean>
     {
-        public override Boolean ReadJson(JsonReader reader, Type objectType, Boolean existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Boolean ReadJson(JsonReader reader, Type objectType, Boolean? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.ReadFrom(reader);
-            return RestServerUtility.StackItemFromJToken(t) as Boolean;
+            if (RestServerUtility.StackItemFromJToken(t) is Boolean b) return b;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, Boolean value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Boolean? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

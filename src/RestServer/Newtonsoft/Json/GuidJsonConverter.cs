@@ -16,7 +16,10 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
     {
         public override Guid ReadJson(JsonReader reader, Type objectType, Guid existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return Guid.Parse(reader.Value?.ToString());
+            var value = reader.Value?.ToString();
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
+            return Guid.Parse(value);
         }
 
         public override void WriteJson(JsonWriter writer, Guid value, JsonSerializer serializer)

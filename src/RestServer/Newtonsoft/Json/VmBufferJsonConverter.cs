@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class VmBufferJsonConverter : JsonConverter<Buffer>
     {
-        public override Buffer ReadJson(JsonReader reader, Type objectType, Buffer existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Buffer ReadJson(JsonReader reader, Type objectType, Buffer? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.ReadFrom(reader);
-            return RestServerUtility.StackItemFromJToken(t) as Buffer;
+            if (RestServerUtility.StackItemFromJToken(t) is Buffer b) return b;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, Buffer value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Buffer? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

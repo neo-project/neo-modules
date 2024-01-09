@@ -22,12 +22,13 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>./wallets/mywallet.json</example>
         [Required(AllowEmptyStrings = false)]
-        public string Path { get; set; }
+        public string Path { get; set; } = string.Empty;
+
         /// <summary>
         /// Password to open the wallet file.
         /// </summary>
         /// <example>Password1!</example>
         [Required(AllowEmptyStrings = false)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 }

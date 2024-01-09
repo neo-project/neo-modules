@@ -23,18 +23,18 @@ namespace Neo.Plugins.RestServer
         #region Settings
 
         public uint Network { get; init; }
-        public IPAddress BindAddress { get; init; }
+        public IPAddress BindAddress { get; init; } = IPAddress.None;
         public uint Port { get; init; }
         public uint KeepAliveTimeout { get; init; }
-        public string SslCertFile { get; init; }
-        public string SslCertPassword { get; init; }
-        public string[] TrustedAuthorities { get; init; }
+        public string? SslCertFile { get; init; }
+        public string? SslCertPassword { get; init; }
+        public string[] TrustedAuthorities { get; init; } = Array.Empty<string>();
         public bool EnableBasicAuthentication { get; init; }
-        public string RestUser { get; init; }
-        public string RestPass { get; init; }
+        public string RestUser { get; init; } = string.Empty;
+        public string RestPass { get; init; } = string.Empty;
         public bool EnableCors { get; init; }
-        public string[] AllowOrigins { get; init; }
-        public string[] DisableControllers { get; init; }
+        public string[] AllowOrigins { get; init; } = Array.Empty<string>();
+        public string[] DisableControllers { get; init; } = Array.Empty<string>();
         public bool EnableCompression { get; init; }
         public CompressionLevel CompressionLevel { get; init; }
         public bool EnableForwardedHeaders { get; init; }
@@ -45,13 +45,12 @@ namespace Neo.Plugins.RestServer
         public long MaxGasInvoke { get; init; }
         public uint MaxTransactionSize { get; init; }
         public uint WalletSessionTimeout { get; init; }
-        public JsonSerializerSettings JsonSerializerSettings { get; init; }
+        public required JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
 
         #region Static Functions
 
-        public static RestServerSettings Current { get; private set; }
         public static RestServerSettings Default { get; } = new()
         {
             Network = 860833102u,
@@ -128,19 +127,21 @@ namespace Neo.Plugins.RestServer
             },
         };
 
+        public static RestServerSettings Current { get; private set; } = Default;
+
         public static void Load(IConfigurationSection section) =>
             Current = new()
             {
                 Network = section.GetValue(nameof(Network), Default.Network),
-                BindAddress = IPAddress.Parse(section.GetSection(nameof(BindAddress)).Value),
+                BindAddress = IPAddress.Parse(section.GetSection(nameof(BindAddress)).Value ?? "0.0.0.0"),
                 Port = section.GetValue(nameof(Port), Default.Port),
                 KeepAliveTimeout = section.GetValue(nameof(KeepAliveTimeout), Default.KeepAliveTimeout),
                 SslCertFile = section.GetValue(nameof(SslCertFile), Default.SslCertFile),
                 SslCertPassword = section.GetValue(nameof(SslCertPassword), Default.SslCertPassword),
                 TrustedAuthorities = section.GetSection(nameof(TrustedAuthorities))?.Get<string[]>() ?? Default.TrustedAuthorities,
                 EnableBasicAuthentication = section.GetValue(nameof(EnableBasicAuthentication), Default.EnableBasicAuthentication),
-                RestUser = section.GetValue(nameof(RestUser), Default.RestUser),
-                RestPass = section.GetValue(nameof(RestPass), Default.RestPass),
+                RestUser = section.GetValue(nameof(RestUser), Default.RestUser) ?? string.Empty,
+                RestPass = section.GetValue(nameof(RestPass), Default.RestPass) ?? string.Empty,
                 EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
                 AllowOrigins = section.GetSection(nameof(AllowOrigins))?.Get<string[]>() ?? Default.AllowOrigins,
                 DisableControllers = section.GetSection(nameof(DisableControllers))?.Get<string[]>() ?? Default.DisableControllers,

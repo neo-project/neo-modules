@@ -20,7 +20,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override bool CanWrite => true;
         public override bool CanRead => true;
 
-        public override WitnessCondition ReadJson(JsonReader reader, Type objectType, WitnessCondition existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override WitnessCondition ReadJson(JsonReader reader, Type objectType, WitnessCondition? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var token = JToken.ReadFrom(reader);
             if (token.Type == JTokenType.Object)
@@ -28,8 +28,10 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             throw new NotSupportedException($"{nameof(WitnessCondition)} Type({token.Type}) is not supported from JSON.");
         }
 
-        public override void WriteJson(JsonWriter writer, WitnessCondition value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, WitnessCondition? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var j = RestServerUtility.WitnessConditionToJToken(value, serializer);
             j.WriteTo(writer);
         }
@@ -39,9 +41,14 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             ArgumentNullException.ThrowIfNull(o, nameof(o));
 
             var typeProp = o.Properties().Single(s => EqualsIgnoreCase(s.Name, "type"));
-            var type = Enum.Parse<WitnessConditionType>(typeProp.Value<string>());
+            var typeValue = typeProp.Value<string>();
+
             try
             {
+                if (typeValue is null) throw new ArgumentNullException();
+
+                var type = Enum.Parse<WitnessConditionType>(typeValue);
+
                 switch (type)
                 {
                     case WitnessConditionType.Boolean:
@@ -86,7 +93,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             {
                 throw new NotSupportedException($"{ex.ParamName} is not supported from JSON.");
             }
-            throw new NotSupportedException($"WitnessConditionType({type}) is not supported from JSON.");
+            throw new NotSupportedException($"WitnessConditionType({typeValue}) is not supported from JSON.");
         }
 
         private static bool EqualsIgnoreCase(string left, string right) =>

@@ -16,6 +16,6 @@ namespace Neo.Plugins.RestServer.Models.Utils
         /// Wallet address that was exported.
         /// </summary>
         /// <example>NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs</example>
-        public virtual string Address { get; set; }
+        public virtual string Address { get; set; } = string.Empty;
     }
 }

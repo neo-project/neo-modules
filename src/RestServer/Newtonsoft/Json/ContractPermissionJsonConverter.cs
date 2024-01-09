@@ -19,9 +19,11 @@ internal class ContractPermissionJsonConverter : JsonConverter<ContractPermissio
 
     public override bool CanWrite => true;
 
-    public override ContractPermission ReadJson(JsonReader reader, Type objectType, ContractPermission existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractPermission value, JsonSerializer serializer)
+    public override ContractPermission ReadJson(JsonReader reader, Type objectType, ContractPermission? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractPermission? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractPermissionToJToken(value, serializer);
         j.WriteTo(writer);
     }

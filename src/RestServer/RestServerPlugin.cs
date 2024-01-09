@@ -21,15 +21,15 @@ namespace Neo.Plugins.RestServer
 
         #region Globals
 
-        private RestServerSettings _settings;
-        private RestWebServer _server;
+        private RestServerSettings? _settings;
+        private RestWebServer? _server;
 
         #endregion
 
         #region Static Globals
 
-        internal static NeoSystem NeoSystem { get; private set; }
-        internal static LocalNode LocalNode { get; private set; }
+        internal static NeoSystem? NeoSystem { get; private set; }
+        internal static LocalNode? LocalNode { get; private set; }
 
         #endregion
 
@@ -41,6 +41,11 @@ namespace Neo.Plugins.RestServer
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (_settings is null)
+            {
+                throw new Exception("'Configure' must be called first");
+            }
+
             if (_settings.EnableCors && _settings.EnableBasicAuthentication && _settings.AllowOrigins.Length == 0)
             {
                 ConsoleHelper.Warning("RestServer: CORS is misconfigured!");

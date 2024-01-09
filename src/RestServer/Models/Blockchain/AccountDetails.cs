@@ -18,17 +18,21 @@ namespace Neo.Plugins.RestServer.Models.Blockchain
         /// Scripthash
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
-        public UInt160 ScriptHash { get; set; }
+        public UInt160 ScriptHash { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// Wallet address.
         /// </summary>
         /// <example>NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs</example>
-        public string Address { get; set; }
+
+        public string Address { get; set; } = string.Empty;
+
         /// <summary>
         /// Balance of the account.
         /// </summary>
         /// <example>10000000</example>
         public BigInteger Balance { get; set; }
+
         /// <summary>
         /// Decimals of the token.
         /// </summary>

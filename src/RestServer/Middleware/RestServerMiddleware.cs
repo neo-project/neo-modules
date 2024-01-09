@@ -34,10 +34,38 @@ namespace Neo.Plugins.RestServer.Middleware
 
         public static void SetServerInfomationHeader(HttpResponse response)
         {
-            var neoCliAsm = Assembly.GetEntryAssembly().GetName();
+            var neoCliAsm = Assembly.GetEntryAssembly()?.GetName();
             var restServerAsm = Assembly.GetExecutingAssembly().GetName();
 
-            response.Headers.Server = $"{neoCliAsm.Name}/{neoCliAsm.Version.ToString(3)} {restServerAsm.Name}/{restServerAsm.Version.ToString(3)}";
+            if (neoCliAsm?.Version is not null && restServerAsm.Version is not null)
+            {
+                if (restServerAsm.Version is not null)
+                {
+                    response.Headers.Server = $"{neoCliAsm.Name}/{neoCliAsm.Version.ToString(3)} {restServerAsm.Name}/{restServerAsm.Version.ToString(3)}";
+                }
+                else
+                {
+                    response.Headers.Server = $"{neoCliAsm.Name}/{neoCliAsm.Version.ToString(3)} {restServerAsm.Name}";
+                }
+            }
+            else
+            {
+                if (neoCliAsm is not null)
+                {
+                    if (restServerAsm is not null)
+                    {
+                        response.Headers.Server = $"{neoCliAsm.Name} {restServerAsm.Name}";
+                    }
+                    else
+                    {
+                        response.Headers.Server = $"{neoCliAsm.Name}";
+                    }
+                }
+                else
+                {
+                    // Can't get the server name/version
+                }
+            }
         }
     }
 }

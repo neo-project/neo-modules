@@ -14,9 +14,9 @@ namespace Neo.Plugins.RestServer.Models.Token
 {
     public class TokenBalanceModel
     {
-        public string Name { get; set; }
-        public UInt160 ScriptHash { get; set; }
-        public string Symbol { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public UInt160 ScriptHash { get; set; } = UInt160.Zero;
+        public string Symbol { get; set; } = string.Empty;
         public byte Decimals { get; set; }
         public BigInteger Balance { get; set; }
         public BigInteger TotalSupply { get; set; }

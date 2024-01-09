@@ -19,11 +19,13 @@ public class BlockJsonConverter : JsonConverter<Block>
 
     public override bool CanWrite => true;
 
-    public override Block ReadJson(JsonReader reader, Type objectType, Block existingValue, bool hasExistingValue, JsonSerializer serializer) =>
+    public override Block ReadJson(JsonReader reader, Type objectType, Block? existingValue, bool hasExistingValue, JsonSerializer serializer) =>
         throw new NotImplementedException();
 
-    public override void WriteJson(JsonWriter writer, Block value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, Block? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.BlockToJToken(value, serializer);
         j.WriteTo(writer);
     }

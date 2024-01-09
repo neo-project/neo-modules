@@ -19,17 +19,19 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA=</example>
         [Required]
-        public byte[] Script { get; set; }
+        public byte[] Script { get; set; } = Array.Empty<byte>();
+
         /// <summary>
         /// ScriptHash of the address in the wallet to send from.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
         [Required]
-        public UInt160 From { get; set; }
+        public UInt160 From { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// An array of the signer that will be signing the transaction.
         /// </summary>
         /// <remarks>Can be null</remarks>
-        public UInt160[] Signers { get; set; }
+        public UInt160[] Signers { get; set; } = Array.Empty<UInt160>();
     }
 }

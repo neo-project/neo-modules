@@ -209,7 +209,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             }
             catch (Exception ex)
             {
-                throw ex?.InnerException ?? ex;
+                throw ex.InnerException ?? ex;
             }
         }
     }

@@ -18,21 +18,25 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override bool CanRead => true;
         public override bool CanWrite => true;
 
-        public override UInt160 ReadJson(JsonReader reader, Type objectType, UInt160 existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override UInt160 ReadJson(JsonReader reader, Type objectType, UInt160? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var value = reader.Value?.ToString();
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             try
             {
-                return RestServerUtility.ConvertToScriptHash(value, RestServerPlugin.NeoSystem.Settings);
+                return RestServerUtility.ConvertToScriptHash(value, RestServerPlugin.NeoSystem!.Settings);
             }
             catch (FormatException)
             {
-                throw new ScriptHashFormatException($"{value} is invalid.");
+                throw new ScriptHashFormatException($"'{value}' is invalid.");
             }
         }
 
-        public override void WriteJson(JsonWriter writer, UInt160 value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, UInt160? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             writer.WriteValue(value.ToString());
         }
     }

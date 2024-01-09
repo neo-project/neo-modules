@@ -39,7 +39,11 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
                     }
                 case JTokenType.Float:
                     {
-                        return new BigDecimal((decimal)((JValue)token).Value);
+                        if (token is JValue jval && jval.Value is not null)
+                        {
+                            return new BigDecimal((decimal)jval.Value);
+                        }
+                        break;
                     }
             }
 

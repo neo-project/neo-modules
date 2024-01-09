@@ -14,6 +14,7 @@ namespace Neo.Plugins.RestServer.Models.Token
 {
     internal class NEP11TokenModel : NEP17TokenModel
     {
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, StackItem>> Tokens { get; set; }
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, StackItem>?> Tokens { get; set; }
+            = new Dictionary<string, IReadOnlyDictionary<string, StackItem>?>().AsReadOnly();
     }
 }

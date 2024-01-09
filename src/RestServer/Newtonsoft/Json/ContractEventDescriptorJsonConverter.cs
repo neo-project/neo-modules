@@ -19,9 +19,11 @@ public class ContractEventDescriptorJsonConverter : JsonConverter<ContractEventD
 
     public override bool CanWrite => true;
 
-    public override ContractEventDescriptor ReadJson(JsonReader reader, Type objectType, ContractEventDescriptor existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractEventDescriptor value, JsonSerializer serializer)
+    public override ContractEventDescriptor ReadJson(JsonReader reader, Type objectType, ContractEventDescriptor? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractEventDescriptor? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractEventToJToken(value, serializer);
         j.WriteTo(writer);
     }

@@ -4,7 +4,7 @@
     <PackageId>Neo.Plugins.RestServer</PackageId>
     <RootNamespace>Neo.Plugins.RestServer</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>

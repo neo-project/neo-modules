@@ -16,17 +16,20 @@ namespace Neo.Plugins.RestServer.Models.Node
         /// Remote peer's ip address.
         /// </summary>
         /// <example>10.0.0.100</example>
-        public string RemoteAddress { get; set; }
+        public string RemoteAddress { get; set; } = string.Empty;
+
         /// <summary>
         /// Remote peer's port number.
         /// </summary>
         /// <example>20333</example>
         public int RemotePort { get; set; }
+
         /// <summary>
         /// Remote peer's listening tcp port.
         /// </summary>
         /// <example>20333</example>
         public int ListenTcpPort { get; set; }
+
         /// <summary>
         /// Remote peer's last synced block height.
         /// </summary>

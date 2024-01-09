@@ -36,7 +36,7 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public NEP11Token(
             NeoSystem neoSystem,
-            DataCache snapshot,
+            DataCache? snapshot,
             UInt160 scriptHash)
         {
             ArgumentNullException.ThrowIfNull(neoSystem, nameof(neoSystem));
@@ -48,11 +48,7 @@ namespace Neo.Plugins.RestServer.Tokens
                 throw new NotSupportedException(nameof(scriptHash));
             Name = _contract.Manifest.Name;
             ScriptHash = scriptHash;
-            Initialize();
-        }
 
-        private void Initialize()
-        {
             byte[] scriptBytes;
             using var sb = new ScriptBuilder();
             sb.EmitDynamicCall(_contract.Hash, "decimals", CallFlags.ReadOnly);
@@ -63,7 +59,7 @@ namespace Neo.Plugins.RestServer.Tokens
             if (appEngine.State != VMState.HALT)
                 throw new NotSupportedException(nameof(ScriptHash));
 
-            Symbol = appEngine.ResultStack.Pop().GetString();
+            Symbol = appEngine.ResultStack.Pop().GetString() ?? throw new ArgumentNullException();
             Decimals = (byte)appEngine.ResultStack.Pop().GetInteger();
         }
 
@@ -158,7 +154,7 @@ namespace Neo.Plugins.RestServer.Tokens
             }
         }
 
-        public IReadOnlyDictionary<string, StackItem> Properties(byte[] tokenId)
+        public IReadOnlyDictionary<string, StackItem>? Properties(byte[] tokenId)
         {
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (ContractHelper.GetContractMethod(_snapshot, ScriptHash, "properties", 1) == null)
@@ -169,7 +165,7 @@ namespace Neo.Plugins.RestServer.Tokens
             {
                 if (results[0] is Map map)
                 {
-                    return map.ToDictionary(key => key.Key.GetString(), value => value.Value);
+                    return map.ToDictionary(key => key.Key.GetString() ?? throw new ArgumentNullException(), value => value.Value);
                 }
             }
             return default;

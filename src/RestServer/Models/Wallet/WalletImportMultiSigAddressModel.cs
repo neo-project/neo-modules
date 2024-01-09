@@ -23,10 +23,11 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>2</example>
         public ushort RequiredSignatures { get; set; }
+
         /// <summary>
         /// Array of public keys of the addresses.
         /// </summary>
         [Required]
-        public ECPoint[] PublicKeys { get; set; }
+        public ECPoint[] PublicKeys { get; set; } = Array.Empty<ECPoint>();
     }
 }

@@ -18,9 +18,11 @@ public class ContractMethodParametersJsonConverter : JsonConverter<ContractParam
 
     public override bool CanWrite => base.CanWrite;
 
-    public override ContractParameterDefinition ReadJson(JsonReader reader, Type objectType, ContractParameterDefinition existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractParameterDefinition value, JsonSerializer serializer)
+    public override ContractParameterDefinition ReadJson(JsonReader reader, Type objectType, ContractParameterDefinition? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractParameterDefinition? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractMethodParameterToJToken(value, serializer);
         j.WriteTo(writer);
     }

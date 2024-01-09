@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class VmIntegerJsonConverter : JsonConverter<Integer>
     {
-        public override Integer ReadJson(JsonReader reader, Type objectType, Integer existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Integer ReadJson(JsonReader reader, Type objectType, Integer? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.ReadFrom(reader);
-            return RestServerUtility.StackItemFromJToken(t) as Integer;
+            if (RestServerUtility.StackItemFromJToken(t) is Integer i) return i;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, Integer value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Integer? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

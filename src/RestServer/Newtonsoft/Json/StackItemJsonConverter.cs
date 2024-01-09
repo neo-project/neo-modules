@@ -16,14 +16,16 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class StackItemJsonConverter : JsonConverter<StackItem>
     {
-        public override StackItem ReadJson(JsonReader reader, Type objectType, StackItem existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override StackItem ReadJson(JsonReader reader, Type objectType, StackItem? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JObject.Load(reader);
             return RestServerUtility.StackItemFromJToken(t);
         }
 
-        public override void WriteJson(JsonWriter writer, StackItem value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, StackItem? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

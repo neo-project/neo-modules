@@ -17,11 +17,11 @@ namespace Neo.Plugins.RestServer.Extensions
     {
         public static bool IsValidNep17(this UInt160 scriptHash)
         {
-            var contractState = NativeContract.ContractManagement.GetContract(RestServerPlugin.NeoSystem.StoreView, scriptHash);
+            var contractState = NativeContract.ContractManagement.GetContract(RestServerPlugin.NeoSystem!.StoreView, scriptHash);
             return ContractHelper.IsNep17Supported(contractState);
         }
 
         public static bool IsValidContract(this UInt160 scriptHash) =>
-            NativeContract.ContractManagement.GetContract(RestServerPlugin.NeoSystem.StoreView, scriptHash) != null;
+            NativeContract.ContractManagement.GetContract(RestServerPlugin.NeoSystem!.StoreView, scriptHash) != null;
     }
 }

@@ -65,13 +65,14 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromBody]
             WalletOpenModel model)
         {
-            if (AppContext.BaseDirectory.StartsWith(Path.GetDirectoryName(Path.GetFullPath(model.Path)), StringComparison.InvariantCultureIgnoreCase) == false)
+            string path = Path.GetDirectoryName(Path.GetFullPath(model.Path)) ??
+                throw new FormatException(nameof(model.Path));
+            if (AppContext.BaseDirectory.StartsWith(path, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
             if (System.IO.File.Exists(model.Path) == false)
                 throw new FileNotFoundException(null, model.Path);
-            var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings);
-            if (wallet == null)
-                throw new WalletOpenException($"File '{model.Path}' could not be opened.");
+            var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings)
+                ?? throw new WalletOpenException($"File '{model.Path}' could not be opened.");
             var sessionId = Guid.NewGuid();
             WalletSessions[sessionId] = new WalletSession(wallet);
             return Ok(new WalletSessionModel()
@@ -149,8 +150,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
-            var account = wallet.GetAccount(scriptHash);
-            if (account == null)
+            var account = wallet.GetAccount(scriptHash) ??
                 throw new WalletException($"Account {scriptHash} doesn\'t exist.");
             var key = account.GetKey();
             return Ok(new WalletExportKeyModel
@@ -284,8 +284,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
-            var account = wallet.Import(model.Wif);
-            if (account == null)
+            var account = wallet.Import(model.Wif) ??
                 throw new WalletException("Account couldn\'t be imported.");
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
@@ -427,8 +426,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                             Data = model.Data,
                         },
                     },
-                    model.From, signers);
-                if (tx == null)
+                    model.From, signers) ??
                     throw new WalletInsufficientFundsException();
                 var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
                 if (totalFees.Value > RestServerSettings.Current.MaxTransactionFee)
@@ -460,10 +458,12 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromBody]
             WalletCreateModel model)
         {
-            if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+            string path = Path.GetDirectoryName(Path.GetFullPath(model.Path)) ??
+                throw new FormatException(nameof(model.Path));
+
+            if (path.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
-            var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings);
-            if (wallet == null)
+            var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings) ??
                 throw new WalletException("Wallet files in that format are not supported, please use a .json or .db3 file extension.");
             if (string.IsNullOrEmpty(model.Wif) == false)
                 wallet.Import(model.Wif);
@@ -507,11 +507,9 @@ namespace Neo.Plugins.RestServer.Controllers.v1
                 throw new WalletException($"{nameof(model.RequiredSignatures)} and {nameof(model.PublicKeys)} is invalid.");
 
             Contract multiSignContract = Contract.CreateMultiSigContract(model.RequiredSignatures, model.PublicKeys);
-            KeyPair keyPair = wallet.GetAccounts().FirstOrDefault(p => p.HasKey && model.PublicKeys.Contains(p.GetKey().PublicKey))?.GetKey();
-            if (keyPair == null)
+            KeyPair? keyPair = (wallet.GetAccounts().FirstOrDefault(p => p.HasKey && model.PublicKeys.Contains(p.GetKey().PublicKey))?.GetKey()) ??
                 throw new WalletException("Couldn\'t get key pair.");
-            var account = wallet.CreateAccount(multiSignContract, keyPair);
-            if (account == null)
+            var account = wallet.CreateAccount(multiSignContract, keyPair) ??
                 throw new WalletException("Account couldn\'t be created.");
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();

@@ -16,14 +16,18 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class VmPointerJsonConverter : JsonConverter<Pointer>
     {
-        public override Pointer ReadJson(JsonReader reader, Type objectType, Pointer existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Pointer ReadJson(JsonReader reader, Type objectType, Pointer? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var t = JToken.ReadFrom(reader);
-            return RestServerUtility.StackItemFromJToken(t) as Pointer;
+            if (RestServerUtility.StackItemFromJToken(t) is Pointer p) return p;
+
+            throw new FormatException();
         }
 
-        public override void WriteJson(JsonWriter writer, Pointer value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Pointer? value, JsonSerializer serializer)
         {
+            if (value is null) throw new ArgumentNullException(nameof(value));
+
             var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }

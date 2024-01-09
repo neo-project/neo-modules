@@ -10,6 +10,7 @@
 
 using Neo.Cryptography.ECC;
 using Neo.SmartContract;
+using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 using Newtonsoft.Json.Linq;
@@ -22,11 +23,13 @@ namespace Neo.Plugins.RestServer
 {
     public static partial class RestServerUtility
     {
+        private readonly static Script EmptyScript = System.Array.Empty<byte>();
+
         public static UInt160 ConvertToScriptHash(string address, ProtocolSettings settings)
         {
             if (UInt160.TryParse(address, out var scriptHash))
                 return scriptHash;
-            return address?.ToScriptHash(settings.AddressVersion);
+            return address.ToScriptHash(settings.AddressVersion);
         }
 
         public static bool TryConvertToScriptHash(string address, ProtocolSettings settings, out UInt160 scriptHash)
@@ -45,19 +48,20 @@ namespace Neo.Plugins.RestServer
             }
         }
 
-        public static StackItem StackItemFromJToken(JToken json)
+        public static StackItem StackItemFromJToken(JToken? json)
         {
-            if (json.Type == JTokenType.Object)
+            if (json is null) return StackItem.Null;
+
+            if (json.Type == JTokenType.Object && json is JObject jsonObject)
             {
-                var jsonObject = json as JObject;
                 var props = jsonObject.Properties();
                 var typeProp = props.SingleOrDefault(s => s.Name.Equals("type", StringComparison.InvariantCultureIgnoreCase));
                 var valueProp = props.SingleOrDefault(s => s.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
 
-                if (typeProp != null)
+                if (typeProp != null && valueProp != null)
                 {
                     StackItem s = StackItem.Null;
-                    var type = Enum.Parse<StackItemType>(typeProp.ToObject<string>(), true);
+                    var type = Enum.Parse<StackItemType>(typeProp.ToObject<string>() ?? throw new ArgumentNullException(), true);
                     var value = valueProp.Value;
 
                     switch (type)
@@ -103,19 +107,19 @@ namespace Neo.Plugins.RestServer
                             s = value.ToObject<bool>() ? StackItem.True : StackItem.False;
                             break;
                         case StackItemType.Buffer:
-                            s = new Buffer(Convert.FromBase64String(value.ToObject<string>()));
+                            s = new Buffer(Convert.FromBase64String(value.ToObject<string>() ?? throw new ArgumentNullException()));
                             break;
                         case StackItemType.ByteString:
-                            s = new ByteString(Convert.FromBase64String(value.ToObject<string>()));
+                            s = new ByteString(Convert.FromBase64String(value.ToObject<string>() ?? throw new ArgumentNullException()));
                             break;
                         case StackItemType.Integer:
                             s = value.ToObject<BigInteger>();
                             break;
                         case StackItemType.InteropInterface:
-                            s = new InteropInterface(Convert.FromBase64String(value.ToObject<string>()));
+                            s = new InteropInterface(Convert.FromBase64String(value.ToObject<string>() ?? throw new ArgumentNullException()));
                             break;
                         case StackItemType.Pointer:
-                            s = new Pointer(null, value.ToObject<int>());
+                            s = new Pointer(EmptyScript, value.ToObject<int>());
                             break;
                         default:
                             break;
@@ -126,14 +130,14 @@ namespace Neo.Plugins.RestServer
             throw new FormatException();
         }
 
-        public static JToken StackItemToJToken(StackItem item, IList<(StackItem, JToken)> context, global::Newtonsoft.Json.JsonSerializer serializer)
+        public static JToken StackItemToJToken(StackItem item, IList<(StackItem, JToken?)>? context, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            JToken o = null;
+            JToken? o = null;
             switch (item)
             {
                 case Struct @struct:
                     if (context is null)
-                        context = new List<(StackItem, JToken)>();
+                        context = new List<(StackItem, JToken?)>();
                     else
                         (_, o) = context.FirstOrDefault(f => ReferenceEquals(f.Item1, item));
                     if (o is null)
@@ -149,7 +153,7 @@ namespace Neo.Plugins.RestServer
                     break;
                 case Array array:
                     if (context is null)
-                        context = new List<(StackItem, JToken)>();
+                        context = new List<(StackItem, JToken?)>();
                     else
                         (_, o) = context.FirstOrDefault(f => ReferenceEquals(f.Item1, item));
                     if (o is null)
@@ -165,7 +169,7 @@ namespace Neo.Plugins.RestServer
                     break;
                 case Map map:
                     if (context is null)
-                        context = new List<(StackItem, JToken)>();
+                        context = new List<(StackItem, JToken?)>();
                     else
                         (_, o) = context.FirstOrDefault(f => ReferenceEquals(f.Item1, item));
                     if (o is null)
@@ -238,8 +242,10 @@ namespace Neo.Plugins.RestServer
             return o;
         }
 
-        public static ContractParameter ContractParameterFromJToken(JToken token)
+        public static ContractParameter ContractParameterFromJToken(JToken? token)
         {
+            if (token is null)
+                throw new ArgumentNullException();
             if (token.Type != JTokenType.Object)
                 throw new FormatException();
 
@@ -254,7 +260,7 @@ namespace Neo.Plugins.RestServer
             if (typeProp == null || valueProp == null)
                 throw new FormatException();
 
-            var typeValue = Enum.Parse<ContractParameterType>(typeProp.ToObject<string>());
+            var typeValue = Enum.Parse<ContractParameterType>(typeProp.ToObject<string>() ?? throw new ArgumentNullException());
 
             switch (typeValue)
             {
@@ -264,13 +270,13 @@ namespace Neo.Plugins.RestServer
                     return new ContractParameter()
                     {
                         Type = ContractParameterType.ByteArray,
-                        Value = Convert.FromBase64String(valueProp.ToObject<string>()),
+                        Value = Convert.FromBase64String(valueProp.ToObject<string>() ?? throw new ArgumentNullException()),
                     };
                 case ContractParameterType.Signature:
                     return new ContractParameter()
                     {
                         Type = ContractParameterType.Signature,
-                        Value = Convert.FromBase64String(valueProp.ToObject<string>()),
+                        Value = Convert.FromBase64String(valueProp.ToObject<string>() ?? throw new ArgumentNullException()),
                     };
                 case ContractParameterType.Boolean:
                     return new ContractParameter()
@@ -282,7 +288,7 @@ namespace Neo.Plugins.RestServer
                     return new ContractParameter()
                     {
                         Type = ContractParameterType.Integer,
-                        Value = BigInteger.Parse(valueProp.ToObject<string>()),
+                        Value = BigInteger.Parse(valueProp.ToObject<string>() ?? throw new ArgumentNullException()),
                     };
                 case ContractParameterType.String:
                     return new ContractParameter()
@@ -309,33 +315,30 @@ namespace Neo.Plugins.RestServer
                         Value = ECPoint.Parse(valueProp.ToObject<string>(), ECCurve.Secp256r1),
                     };
                 case ContractParameterType.Array:
-                    if (valueProp.Value?.Type != JTokenType.Array)
+                    if (valueProp.Value is not JArray array)
                         throw new FormatException();
-                    var array = valueProp.Value as JArray;
                     return new ContractParameter()
                     {
                         Type = ContractParameterType.Array,
                         Value = array.Select(ContractParameterFromJToken).ToList(),
                     };
                 case ContractParameterType.Map:
-                    if (valueProp.Value?.Type != JTokenType.Array)
+                    if (valueProp.Value is not JArray map)
                         throw new FormatException();
-                    var map = valueProp.Value as JArray;
                     return new ContractParameter()
                     {
                         Type = ContractParameterType.Map,
                         Value = map.Select(s =>
                         {
-                            if (s.Type != JTokenType.Object)
+                            if (valueProp.Value is not JObject mapProp)
                                 throw new FormatException();
-                            var mapProp = valueProp.Value as JObject;
                             var keyProp = mapProp
                                 .Properties()
                                 .SingleOrDefault(ss => ss.Name.Equals("key", StringComparison.InvariantCultureIgnoreCase));
                             var keyValueProp = mapProp
                                 .Properties()
                                 .SingleOrDefault(ss => ss.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
-                            return new KeyValuePair<ContractParameter, ContractParameter>(ContractParameterFromJToken(keyProp.Value), ContractParameterFromJToken(keyValueProp.Value));
+                            return new KeyValuePair<ContractParameter, ContractParameter>(ContractParameterFromJToken(keyProp?.Value), ContractParameterFromJToken(keyValueProp?.Value));
                         }).ToList(),
                     };
                 default:

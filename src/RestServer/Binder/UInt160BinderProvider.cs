@@ -15,7 +15,7 @@ namespace Neo.Plugins.RestServer.Binder
 {
     internal class NeoBinderProvider : IModelBinderProvider
     {
-        public IModelBinder GetBinder(ModelBinderProviderContext context)
+        public IModelBinder? GetBinder(ModelBinderProviderContext context)
         {
             if (context == null)
             {

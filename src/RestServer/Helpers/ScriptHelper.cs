@@ -10,6 +10,7 @@
 
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins.RestServer.Exceptions;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -39,11 +40,12 @@ namespace Neo.Plugins.RestServer.Helpers
             return engine;
         }
 
-        public static ApplicationEngine InvokeScript(ReadOnlyMemory<byte> script, Signer[] signers = null, Witness[] witnesses = null)
+        public static ApplicationEngine InvokeScript(ReadOnlyMemory<byte> script, Signer[]? signers = null, Witness[]? witnesses = null)
         {
-            var neosystem = RestServerPlugin.NeoSystem;
+            var neosystem = RestServerPlugin.NeoSystem ?? throw new InvalidOperationException();
+
             var snapshot = neosystem.GetSnapshot();
-            Transaction tx = signers == null ? null : new Transaction
+            Transaction? tx = signers == null ? null : new Transaction
             {
                 Version = 0,
                 Nonce = (uint)Random.Shared.Next(),

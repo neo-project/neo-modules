@@ -19,9 +19,11 @@ public class TransactionJsonConverter : JsonConverter<Transaction>
 
     public override bool CanWrite => true;
 
-    public override Transaction ReadJson(JsonReader reader, Type objectType, Transaction existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, Transaction value, JsonSerializer serializer)
+    public override Transaction ReadJson(JsonReader reader, Type objectType, Transaction? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, Transaction? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.TransactionToJToken(value, serializer);
         j.WriteTo(writer);
     }

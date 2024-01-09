@@ -23,19 +23,22 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// </summary>
         /// <example>0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5</example>
         [Required]
-        public UInt160 AssetId { get; set; }
+        public UInt160 AssetId { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// ScriptHash of the address in the wallet to send from.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
         [Required]
-        public UInt160 From { get; set; }
+        public UInt160 From { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// ScriptHash of the address in the wallet to send too.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
         [Required]
-        public UInt160 To { get; set; }
+        public UInt160 To { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// Amount
         /// </summary>
@@ -43,16 +46,18 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// <remarks>Not user representation.</remarks>
         [Required]
         public BigInteger Amount { get; set; }
+
         /// <summary>
         /// Data you would like to send.
         /// </summary>
         /// <remarks>can be null or empty.</remarks>
         /// <example>SGVsbG8gV29ybGQ=</example>
-        public byte[] Data { get; set; }
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+
         /// <summary>
         /// An array of the signer that will be signing the transaction.
         /// </summary>
         /// <remarks>Can be null</remarks>
-        public UInt160[] Signers { get; set; }
+        public UInt160[] Signers { get; set; } = Array.Empty<UInt160>();
     }
 }

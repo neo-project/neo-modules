@@ -19,9 +19,11 @@ public class ContractAbiJsonConverter : JsonConverter<ContractAbi>
 
     public override bool CanWrite => true;
 
-    public override ContractAbi ReadJson(JsonReader reader, Type objectType, ContractAbi existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
-    public override void WriteJson(JsonWriter writer, ContractAbi value, JsonSerializer serializer)
+    public override ContractAbi ReadJson(JsonReader reader, Type objectType, ContractAbi? existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+    public override void WriteJson(JsonWriter writer, ContractAbi? value, JsonSerializer serializer)
     {
+        if (value is null) throw new ArgumentNullException(nameof(value));
+
         var j = RestServerUtility.ContractAbiToJToken(value, serializer);
         j.WriteTo(writer);
     }

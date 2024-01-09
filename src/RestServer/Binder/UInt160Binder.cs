@@ -37,7 +37,7 @@ namespace Neo.Plugins.RestServer.Binder
                 if (string.IsNullOrEmpty(value))
                     return Task.CompletedTask;
 
-                var model = RestServerUtility.ConvertToScriptHash(value, RestServerPlugin.NeoSystem.Settings);
+                var model = RestServerUtility.ConvertToScriptHash(value, RestServerPlugin.NeoSystem!.Settings);
                 bindingContext.Result = ModelBindingResult.Success(model);
             }
             return Task.CompletedTask;

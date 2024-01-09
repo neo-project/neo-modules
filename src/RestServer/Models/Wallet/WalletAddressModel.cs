@@ -21,32 +21,38 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Wallet address that was exported.
         /// </summary>
         /// <example>NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs</example>
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
+
         /// <summary>
         /// Scripthash of the wallet account exported.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
-        public UInt160 ScriptHash { get; set; }
+        public UInt160 ScriptHash { get; set; } = UInt160.Zero;
+
         /// <summary>
         /// Public key of the wallet address.
         /// </summary>
         /// <example>03cdb067d930fd5adaa6c68545016044aaddec64ba39e548250eaea551172e535c</example>
-        public ECPoint Publickey { get; set; }
+        public ECPoint? Publickey { get; set; }
+
         /// <summary>
         /// has a private key or not.
         /// </summary>
         /// <example>true</example>
         public bool HasKey { get; set; }
+
         /// <summary>
         /// Address type.
         /// </summary>
         /// <example>Standard/MultiSignature/WatchOnly</example>
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
+
         /// <summary>
         /// The display name for the address.
         /// </summary>
         /// <example>Default Account</example>
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
+
         /// <summary>
         /// is the address a WatchOnly address.
         /// </summary>
