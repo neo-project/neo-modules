@@ -172,6 +172,11 @@ namespace Neo.Plugins
 
         private static Signer[] SignersFromJson(JArray _params, ProtocolSettings settings)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             var ret = _params.Select(u => new Signer
             {
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
@@ -190,6 +195,11 @@ namespace Neo.Plugins
 
         private static Witness[] WitnessesFromJson(JArray _params)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             return _params.Select(u => new
             {
                 Invocation = u["invocation"]?.AsString(),
