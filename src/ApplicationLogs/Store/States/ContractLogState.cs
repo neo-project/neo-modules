@@ -17,7 +17,7 @@ namespace ApplicationLogs.Store.States
 {
     public class ContractLogState : NotifyLogState, IEquatable<ContractLogState>
     {
-        public UInt256 TransactionHash { get; private set; } = new();
+        public UInt256 TransactionHash { get; private set; } = UInt256.Zero;
         public TriggerType Trigger { get; private set; } = TriggerType.All;
 
         public static ContractLogState Create(Blockchain.ApplicationExecuted applicationExecuted, NotifyEventArgs notifyEventArgs, Guid[] stackItemIds) =>

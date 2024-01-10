@@ -16,7 +16,7 @@ namespace ApplicationLogs.Store.States
 {
     public class NotifyLogState : ISerializable, IEquatable<NotifyLogState>
     {
-        public UInt160 ScriptHash { get; protected set; } = new();
+        public UInt160 ScriptHash { get; protected set; } = UInt160.Zero;
         public string EventName { get; protected set; } = string.Empty;
         public Guid[] StackItemIds { get; protected set; } = Array.Empty<Guid>();
 
