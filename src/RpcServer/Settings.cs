@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// Settings.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -39,6 +40,10 @@ namespace Neo.Plugins
         public int MaxRequestBodySize { get; init; }
         public string RpcUser { get; init; }
         public string RpcPass { get; init; }
+        public bool EnableCors { get; init; }
+        public string[] AllowOrigins { get; init; }
+        public int KeepAliveTimeout { get; init; }
+        public uint RequestHeadersTimeout { get; init; }
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
@@ -57,6 +62,10 @@ namespace Neo.Plugins
             MaxGasInvoke = (long)new BigDecimal(10M, NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(0.1M, NativeContract.GAS.Decimals).Value,
             TrustedAuthorities = Array.Empty<string>(),
+            EnableCors = true,
+            AllowOrigins = Array.Empty<string>(),
+            KeepAliveTimeout = 60,
+            RequestHeadersTimeout = 15,
             MaxIteratorResultItems = 100,
             MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
@@ -77,6 +86,10 @@ namespace Neo.Plugins
             TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
             RpcUser = section.GetSection("RpcUser").Value,
             RpcPass = section.GetSection("RpcPass").Value,
+            EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
+            AllowOrigins = section.GetSection(nameof(AllowOrigins)).GetChildren().Select(p => p.Get<string>()).ToArray(),
+            KeepAliveTimeout = section.GetValue(nameof(KeepAliveTimeout), Default.KeepAliveTimeout),
+            RequestHeadersTimeout = section.GetValue(nameof(RequestHeadersTimeout), Default.RequestHeadersTimeout),
             MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),

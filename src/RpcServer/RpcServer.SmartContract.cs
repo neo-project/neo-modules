@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.SmartContract.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -171,6 +172,11 @@ namespace Neo.Plugins
 
         private static Signer[] SignersFromJson(JArray _params, ProtocolSettings settings)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             var ret = _params.Select(u => new Signer
             {
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
@@ -189,6 +195,11 @@ namespace Neo.Plugins
 
         private static Witness[] WitnessesFromJson(JArray _params)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             return _params.Select(u => new
             {
                 Invocation = u["invocation"]?.AsString(),

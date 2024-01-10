@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcVersion.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -81,8 +82,6 @@ namespace Neo.Network.RPC.Models
 
         public int TcpPort { get; set; }
 
-        public int WsPort { get; set; }
-
         public uint Nonce { get; set; }
 
         public string UserAgent { get; set; }
@@ -94,7 +93,6 @@ namespace Neo.Network.RPC.Models
             JObject json = new();
             json["network"] = Protocol.Network; // Obsolete
             json["tcpport"] = TcpPort;
-            json["wsport"] = WsPort;
             json["nonce"] = Nonce;
             json["useragent"] = UserAgent;
             json["protocol"] = Protocol.ToJson();
@@ -106,7 +104,6 @@ namespace Neo.Network.RPC.Models
             return new()
             {
                 TcpPort = (int)json["tcpport"].AsNumber(),
-                WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),
                 UserAgent = json["useragent"].AsString(),
                 Protocol = RpcProtocol.FromJson((JObject)json["protocol"])
