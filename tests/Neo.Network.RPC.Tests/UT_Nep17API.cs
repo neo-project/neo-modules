@@ -1,3 +1,14 @@
+// Copyright (C) 2015-2024 The Neo Project.
+//
+// UT_Nep17API.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.Json;
@@ -104,13 +115,13 @@ namespace Neo.Network.RPC.Tests
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Name.ToLower());
                     Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
-                    Assert.AreEqual(8, (int)result.Decimals);
+                    Assert.AreEqual(8, result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("GasToken", result.Name);
 
                     result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
                     Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
-                    Assert.AreEqual(8, (int)result.Decimals);
+                    Assert.AreEqual(8, result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("GasToken", result.Name);
                     haveGasTokenUT = true;
@@ -119,13 +130,13 @@ namespace Neo.Network.RPC.Tests
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Name.ToLower());
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
-                    Assert.AreEqual(0, (int)result.Decimals);
+                    Assert.AreEqual(0, result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("NeoToken", result.Name);
 
                     result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Hash);
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
-                    Assert.AreEqual(0, (int)result.Decimals);
+                    Assert.AreEqual(0, result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("NeoToken", result.Name);
                     haveNeoTokenUT = true;

@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// StateAPI.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -53,7 +54,7 @@ namespace Neo.Network.RPC
             return (localRootIndex, validatedRootIndex);
         }
 
-        static uint? ToNullableUint(JToken json) => (json == null) ? (uint?)null : (uint?)json.AsNumber();
+        static uint? ToNullableUint(JToken json) => (json == null) ? null : (uint?)json.AsNumber();
 
         public static JToken[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
