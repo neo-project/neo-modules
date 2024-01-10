@@ -12,7 +12,7 @@
     "RestPass": "",
     "EnableCors": true,
     "AllowOrigins": [], // Example: "http://www.example.com"
-    "DisableControllers": [ "WalletController" ],
+    "DisableControllers": [],
     "EnableCompression": true,
     "CompressionLevel": "SmallestSize", // "Fastest" or "Optimal" or "NoCompression" or "SmallestSize"
     "EnableForwardedHeaders": false,
