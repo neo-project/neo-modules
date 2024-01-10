@@ -286,7 +286,8 @@ namespace Neo.Plugins
             {
                 using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
                 resultstack = engine.ResultStack.ToArray();
-            }catch
+            }
+            catch
             {
                 throw new RpcException(RpcError.InternalServerError.WithData("Can't get candidates."));
             }

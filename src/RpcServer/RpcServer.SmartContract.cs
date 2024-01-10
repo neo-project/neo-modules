@@ -174,7 +174,7 @@ namespace Neo.Plugins
         {
             if (_params.Count > Transaction.MaxTransactionAttributes)
             {
-                throw new RpcException(-100, "Max allowed witness exceeded.");
+                throw new RpcException(RpcError.InvalidParams.WithData("Max allowed witness exceeded."));
             }
 
             var ret = _params.Select(u => new Signer
@@ -197,7 +197,7 @@ namespace Neo.Plugins
         {
             if (_params.Count > Transaction.MaxTransactionAttributes)
             {
-                throw new RpcException(-100, "Max allowed witness exceeded.");
+                throw new RpcException(RpcError.InvalidParams.WithData("Max allowed witness exceeded."));
             }
 
             return _params.Select(u => new
