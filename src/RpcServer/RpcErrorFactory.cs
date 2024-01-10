@@ -26,7 +26,7 @@ namespace Neo.Plugins
 
         #region Require data
 
-        public static RpcError MethodNotFound(string method) => RpcError.AlreadyExists.WithData($"The method '{method}' doesn't exists.");
+        public static RpcError MethodNotFound(string method) => RpcError.MethodNotFound.WithData($"The method '{method}' doesn't exists.");
         public static RpcError AlreadyExists(string data) => RpcError.AlreadyExists.WithData(data);
         public static RpcError InvalidParams(string data) => RpcError.InvalidParams.WithData(data);
         public static RpcError BadRequest(string data) => RpcError.BadRequest.WithData(data);

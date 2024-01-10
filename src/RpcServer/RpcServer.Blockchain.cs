@@ -280,15 +280,23 @@ namespace Neo.Plugins
             {
                 script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
             }
-            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+            StackItem[] resultstack;
+            try
+            {
+                using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+                resultstack = engine.ResultStack.ToArray();
+            }catch
+            {
+                throw new RpcException(RpcError.InternalServerError.WithData("Can't get candidates."));
+            }
+
             JObject json = new();
             try
             {
-                var resultstack = engine.ResultStack.ToArray();
                 if (resultstack.Length > 0)
                 {
                     JArray jArray = new();
-                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount) ?? throw new RpcException(RpcError.InternalServerError.WithData("Can't get next block validators."));
 
                     foreach (var item in resultstack)
                     {
@@ -310,6 +318,7 @@ namespace Neo.Plugins
             {
                 json["exception"] = "Invalid result.";
             }
+
             return json;
         }
 

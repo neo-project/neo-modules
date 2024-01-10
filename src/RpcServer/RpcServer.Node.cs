@@ -65,6 +65,10 @@ namespace Neo.Plugins
                     {
                         throw new RpcException(RpcError.AlreadyExists.WithData(reason.ToString()));
                     }
+                case VerifyResult.AlreadyInPool:
+                    {
+                        throw new RpcException(RpcError.AlreadyInPool.WithData(reason.ToString()));
+                    }
                 case VerifyResult.OutOfMemory:
                     {
                         throw new RpcException(RpcError.MempoolCapReached.WithData(reason.ToString()));
