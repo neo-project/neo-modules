@@ -46,7 +46,6 @@ namespace ApplicationLogs.Store.States
             Exception = reader.ReadVarString();
             GasConsumed = reader.ReadInt64();
 
-            // It should be safe because it filled from a transaction's stack.
             uint aLen = reader.ReadUInt32();
             StackItemIds = new Guid[aLen];
             for (int i = 0; i < aLen; i++)

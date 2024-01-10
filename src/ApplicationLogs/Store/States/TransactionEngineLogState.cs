@@ -31,7 +31,6 @@ namespace Neo.Plugins.Store.States
 
         public virtual void Deserialize(ref MemoryReader reader)
         {
-            // It should be safe because it filled from a transaction's logs.
             uint aLen = reader.ReadUInt32();
             LogIds = new Guid[aLen];
             for (int i = 0; i < aLen; i++)

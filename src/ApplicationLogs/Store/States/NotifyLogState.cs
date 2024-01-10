@@ -17,7 +17,7 @@ namespace ApplicationLogs.Store.States
 {
     public class NotifyLogState : ISerializable, IEquatable<NotifyLogState>
     {
-        public UInt160 ScriptHash { get; protected set; } = UInt160.Zero;
+        public UInt160 ScriptHash { get; protected set; } = new();
         public string EventName { get; protected set; } = string.Empty;
         public Guid[] StackItemIds { get; protected set; } = Array.Empty<Guid>();
 
@@ -41,7 +41,6 @@ namespace ApplicationLogs.Store.States
             ScriptHash.Deserialize(ref reader);
             EventName = reader.ReadVarString();
 
-            // It should be safe because it filled from a transaction's notifications.
             uint aLen = reader.ReadUInt32();
             StackItemIds = new Guid[aLen];
             for (int i = 0; i < aLen; i++)
@@ -63,8 +62,8 @@ namespace ApplicationLogs.Store.States
         #region IEquatable
 
         public bool Equals(NotifyLogState other) =>
-            EventName == other.EventName && ScriptHash == other.ScriptHash &&
-            StackItemIds.SequenceEqual(other.StackItemIds);
+            EventName == other.EventName && StackItemIds.SequenceEqual(other.StackItemIds) &&
+            ScriptHash == other.ScriptHash;
 
         public override bool Equals(object obj)
         {
