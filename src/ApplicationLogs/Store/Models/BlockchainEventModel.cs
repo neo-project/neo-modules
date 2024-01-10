@@ -18,7 +18,7 @@ namespace ApplicationLogs.Store.Models
 {
     public class BlockchainEventModel
     {
-        public UInt160 ScriptHash { get; private init; } = new();
+        public UInt160 ScriptHash { get; private init; } = UInt160.Zero;
         public string EventName { get; private init; } = string.Empty;
         public StackItem[] State { get; private init; } = Array.Empty<StackItem>();
 

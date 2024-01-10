@@ -34,6 +34,7 @@ namespace Neo.Plugins.Store.States
         public virtual void Deserialize(ref MemoryReader reader)
         {
             ScriptHash.Deserialize(ref reader);
+            // It should be safe because it filled from a transaction's logs.
             Message = reader.ReadVarString();
         }
 

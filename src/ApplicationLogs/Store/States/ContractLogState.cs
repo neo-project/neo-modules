@@ -18,7 +18,7 @@ namespace ApplicationLogs.Store.States
 {
     public class ContractLogState : NotifyLogState, IEquatable<ContractLogState>
     {
-        public UInt256 TransactionHash { get; private set; } = new();
+        public UInt256 TransactionHash { get; private set; } = UInt256.Zero;
         public TriggerType Trigger { get; private set; } = TriggerType.All;
 
         public static ContractLogState Create(Blockchain.ApplicationExecuted applicationExecuted, NotifyEventArgs notifyEventArgs, Guid[] stackItemIds) =>
@@ -57,8 +57,8 @@ namespace ApplicationLogs.Store.States
         #region IEquatable
 
         public bool Equals(ContractLogState other) =>
-            EventName == other.EventName && StackItemIds.SequenceEqual(other.StackItemIds) &&
-            TransactionHash == other.TransactionHash && Trigger == other.Trigger;
+            Trigger == other.Trigger && EventName == other.EventName &&
+            TransactionHash == other.TransactionHash && StackItemIds.SequenceEqual(other.StackItemIds);
 
         public override bool Equals(object obj)
         {
