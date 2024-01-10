@@ -31,7 +31,7 @@ namespace Neo.Plugins
 
         private NeoStore _neostore;
         private NeoSystem _neosystem;
-        private List<LogEventArgs> _logEvents;
+        private readonly List<LogEventArgs> _logEvents;
 
         #endregion
 
