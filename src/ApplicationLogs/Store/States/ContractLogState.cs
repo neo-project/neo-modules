@@ -56,8 +56,8 @@ namespace ApplicationLogs.Store.States
         #region IEquatable
 
         public bool Equals(ContractLogState other) =>
-            EventName == other.EventName && StackItemIds.SequenceEqual(other.StackItemIds) &&
-            TransactionHash == other.TransactionHash && Trigger == other.Trigger;
+            Trigger == other.Trigger && EventName == other.EventName &&
+            TransactionHash == other.TransactionHash && StackItemIds.SequenceEqual(other.StackItemIds);
 
         public override bool Equals(object obj)
         {

@@ -31,6 +31,7 @@ namespace ApplicationLogs.Store.States
 
         public virtual void Deserialize(ref MemoryReader reader)
         {
+            // It should be safe because it filled from a block's notifications.
             uint aLen = reader.ReadUInt32();
             NotifyLogIds = new Guid[aLen];
             for (int i = 0; i < aLen; i++)
