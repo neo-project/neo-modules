@@ -316,9 +316,9 @@ namespace Neo.Plugins
                     }
                 }
             }
-            catch (InvalidOperationException)
+            catch
             {
-                json["exception"] = "Invalid result.";
+                throw new RpcException(RpcError.InternalServerError.WithData("Can't get next block validators"));
             }
 
             return json;
