@@ -59,12 +59,12 @@ You can also use `RocksDBStore` in the NEO system by modifying the default stora
 ### RpcServer
 Plugin for hosting a RpcServer on the neo-node, being able to disable specific calls.
 
-### RpcNep17Tracker
-Plugin that enables NEP17 tracking using LevelDB.
+### TokensTracker
+Plugin that enables NEP11 and NEP17 tracking using LevelDB.
 This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
 
 ## C# SDK
 
 ### RpcClient
 The RpcClient Project is an individual SDK that is used to interact with NEO blockchain through NEO RPC methods for development using. The main functions include RPC calling, Transaction making, Contract deployment & calling, and Asset transfering.
-It needs a NEO node with the `RpcServer` plugin as a provider. And the provider needs more plugins like `RpcNep17Tracker` and `ApplicationLogs` if you want to call RPC methods supplied by the plugins.
+It needs a NEO node with the `RpcServer` plugin as a provider. And the provider needs more plugins like `TokensTracker` and `ApplicationLogs` if you want to call RPC methods supplied by the plugins.
