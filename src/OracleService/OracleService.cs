@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Plugins.OracleService is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// OracleService.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -14,7 +15,7 @@ using Neo.ConsoleService;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -268,11 +269,13 @@ namespace Neo.Plugins
 
         private async Task ProcessRequestAsync(DataCache snapshot, OracleRequest req)
         {
-            Log($"Process oracle request txid: {req.OriginalTxid}, url: {req.Url}");
+            Log($"[{req.OriginalTxid}] Process oracle request start:<{req.Url}>");
 
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
 
             (OracleResponseCode code, string data) = await ProcessUrlAsync(req.Url);
+
+            Log($"[{req.OriginalTxid}] Process oracle request end:<{req.Url}>, responseCode:{code}, response:{data}");
 
             var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
@@ -284,16 +287,17 @@ namespace Neo.Plugins
                     {
                         result = Filter(data, request.Filter);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         code = OracleResponseCode.Error;
+                        Log($"[{req.OriginalTxid}] Filter '{request.Filter}' error:{ex.Message}");
                     }
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
                 var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes, System.Settings);
                 var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings, true);
 
-                Log($"Builded response tx:{responseTx.Hash}, responseCode:{code}, validUntilBlock:{responseTx.ValidUntilBlock}-{backupTx.ValidUntilBlock}, requestTx:{request.OriginalTxid}, requestId: {requestId}");
+                Log($"[{req.OriginalTxid}]-({requestId}) Built response tx[[{responseTx.Hash}]], responseCode:{code}, result:{result.ToHexString()}, validUntilBlock:{responseTx.ValidUntilBlock}, backupTx:{backupTx.Hash}-{backupTx.ValidUntilBlock}");
 
                 List<Task> tasks = new List<Task>();
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
@@ -307,7 +311,7 @@ namespace Neo.Plugins
                     AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                     tasks.Add(SendResponseSignatureAsync(requestId, txSign, account.GetKey()));
 
-                    Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
+                    Log($"[{request.OriginalTxid}]-[[{responseTx.Hash}]] Send oracle sign data, Oracle node: {oraclePub}, Sign: {txSign.ToHexString()}");
                 }
                 await Task.WhenAll(tasks);
             }
@@ -348,9 +352,9 @@ namespace Neo.Plugins
         private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
         {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return (OracleResponseCode.Error, null);
+                return (OracleResponseCode.Error, $"Invalid url:<{url}>");
             if (!protocols.TryGetValue(uri.Scheme, out IOracleProtocol protocol))
-                return (OracleResponseCode.ProtocolNotSupported, null);
+                return (OracleResponseCode.ProtocolNotSupported, $"Invalid Protocol:<{url}>");
 
             using CancellationTokenSource ctsTimeout = new(Settings.Default.MaxOracleTimeout);
             using CancellationTokenSource ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(cancelSource.Token, ctsTimeout.Token);
@@ -359,9 +363,9 @@ namespace Neo.Plugins
             {
                 return await protocol.ProcessAsync(uri, ctsLinked.Token);
             }
-            catch
+            catch (Exception ex)
             {
-                return (OracleResponseCode.Error, null);
+                return (OracleResponseCode.Error, $"Request <{url}> Error:{ex.Message}");
             }
         }
 
@@ -507,7 +511,7 @@ namespace Neo.Plugins
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
 
-            JObject beforeObject = JObject.Parse(input);
+            JToken beforeObject = JToken.Parse(input);
             JArray afterObjects = beforeObject.JsonPath(filterArgs);
             return afterObjects.ToByteArray(false);
         }

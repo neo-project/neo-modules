@@ -1,3 +1,14 @@
+// Copyright (C) 2015-2024 The Neo Project.
+//
+// UT_OracleService.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
@@ -64,7 +75,7 @@ namespace Neo.Plugins.Tests
             var executionFactor = NativeContract.Policy.GetExecFeeFactor(snapshot);
             Assert.AreEqual(executionFactor, (uint)30);
             var feePerByte = NativeContract.Policy.GetFeePerByte(snapshot);
-            Assert.AreEqual(feePerByte, (uint)1000);
+            Assert.AreEqual(feePerByte, 1000);
 
             OracleRequest request = new OracleRequest
             {

@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.SmartContract.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -10,7 +11,7 @@
 
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -23,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Array = System.Array;
 
 namespace Neo.Plugins
 {
@@ -92,14 +94,19 @@ namespace Neo.Plugins
                         ["storagechanges"] = ToJson(session.Engine.Snapshot.GetChangeSet())
                     };
                 }
-                try
+                var stack = new JArray();
+                foreach (var item in session.Engine.ResultStack)
                 {
-                    json["stack"] = new JArray(session.Engine.ResultStack.Select(p => ToJson(p, session)));
+                    try
+                    {
+                        stack.Add(ToJson(item, session));
+                    }
+                    catch (Exception ex)
+                    {
+                        stack.Add("error: " + ex.Message);
+                    }
                 }
-                catch (InvalidOperationException)
-                {
-                    json["stack"] = "error: invalid operation";
-                }
+                json["stack"] = stack;
                 if (session.Engine.State != VMState.FAULT)
                 {
                     ProcessInvokeWithWallet(json, signers);
@@ -135,7 +142,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject ToJson(IEnumerable<DataCache.Trackable> changes)
+        private static JArray ToJson(IEnumerable<DataCache.Trackable> changes)
         {
             JArray array = new();
             foreach (var entry in changes)
@@ -165,13 +172,18 @@ namespace Neo.Plugins
 
         private static Signer[] SignersFromJson(JArray _params, ProtocolSettings settings)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             var ret = _params.Select(u => new Signer
             {
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
-                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
-                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
-                Rules = ((JArray)u["rules"])?.Select(WitnessRule.FromJson).ToArray(),
+                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray() ?? Array.Empty<UInt160>(),
+                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray() ?? Array.Empty<ECPoint>(),
+                Rules = ((JArray)u["rules"])?.Select(r => WitnessRule.FromJson((JObject)r)).ToArray() ?? Array.Empty<WitnessRule>(),
             }).ToArray();
 
             // Validate format
@@ -183,6 +195,11 @@ namespace Neo.Plugins
 
         private static Witness[] WitnessesFromJson(JArray _params)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             return _params.Select(u => new
             {
                 Invocation = u["invocation"]?.AsString(),
@@ -195,11 +212,11 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeFunction(JArray _params)
+        protected virtual JToken InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
             bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
@@ -213,7 +230,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeScript(JArray _params)
+        protected virtual JToken InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
@@ -223,7 +240,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject TraverseIterator(JArray _params)
+        protected virtual JToken TraverseIterator(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Guid iid = Guid.Parse(_params[1].GetString());
@@ -244,7 +261,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject TerminateSession(JArray _params)
+        protected virtual JToken TerminateSession(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Session session;
@@ -256,7 +273,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetUnclaimedGas(JArray _params)
+        protected virtual JToken GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
             JObject json = new();

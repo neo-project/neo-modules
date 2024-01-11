@@ -1,14 +1,18 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcVersion.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
@@ -25,6 +29,7 @@ namespace Neo.Network.RPC.Models
             public uint MaxTransactionsPerBlock { get; set; }
             public int MemoryPoolMaxTransactions { get; set; }
             public ulong InitialGasDistribution { get; set; }
+            public IReadOnlyDictionary<Hardfork, uint> Hardforks { get; set; }
 
             public JObject ToJson()
             {
@@ -38,6 +43,12 @@ namespace Neo.Network.RPC.Models
                 json["maxtransactionsperblock"] = MaxTransactionsPerBlock;
                 json["memorypoolmaxtransactions"] = MemoryPoolMaxTransactions;
                 json["initialgasdistribution"] = InitialGasDistribution;
+                json["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
+                {
+                    // Strip HF_ prefix.
+                    ["name"] = StripPrefix(s.Key.ToString(), "HF_"),
+                    ["blockheight"] = s.Value,
+                }));
                 return json;
             }
 
@@ -54,13 +65,22 @@ namespace Neo.Network.RPC.Models
                     MaxTransactionsPerBlock = (uint)json["maxtransactionsperblock"].AsNumber(),
                     MemoryPoolMaxTransactions = (int)json["memorypoolmaxtransactions"].AsNumber(),
                     InitialGasDistribution = (ulong)json["initialgasdistribution"].AsNumber(),
+                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s =>
+                    {
+                        var name = s["name"].AsString();
+                        // Add HF_ prefix to the hardfork response for proper Hardfork enum parsing.
+                        return new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>(name.StartsWith("HF_") ? name : $"HF_{name}"), (uint)s["blockheight"].AsNumber());
+                    })),
                 };
+            }
+
+            private static string StripPrefix(string s, string prefix)
+            {
+                return s.StartsWith(prefix) ? s.Substring(prefix.Length) : s;
             }
         }
 
         public int TcpPort { get; set; }
-
-        public int WsPort { get; set; }
 
         public uint Nonce { get; set; }
 
@@ -73,7 +93,6 @@ namespace Neo.Network.RPC.Models
             JObject json = new();
             json["network"] = Protocol.Network; // Obsolete
             json["tcpport"] = TcpPort;
-            json["wsport"] = WsPort;
             json["nonce"] = Nonce;
             json["useragent"] = UserAgent;
             json["protocol"] = Protocol.ToJson();
@@ -85,10 +104,9 @@ namespace Neo.Network.RPC.Models
             return new()
             {
                 TcpPort = (int)json["tcpport"].AsNumber(),
-                WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),
                 UserAgent = json["useragent"].AsString(),
-                Protocol = RpcProtocol.FromJson(json["protocol"])
+                Protocol = RpcProtocol.FromJson((JObject)json["protocol"])
             };
         }
     }

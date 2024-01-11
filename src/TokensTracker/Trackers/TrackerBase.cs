@@ -1,31 +1,32 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// TrackerBase.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.IO;
+using Neo.Json;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
+using Neo.VM.Types;
+using Neo.Wallets;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Neo.IO;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
-using Neo.VM.Types;
-using Neo.Wallets;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers
 {
-    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount);
+    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, byte[] tokenId, BigInteger amount);
 
     abstract class TrackerBase
     {
@@ -129,7 +130,7 @@ namespace Neo.Plugins.Trackers
             return stateItems.Count switch
             {
                 3 => new TransferRecord(asset, @from, to, null, amountItem.GetInteger()),
-                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId, amountItem.GetInteger()),
+                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId.Memory.ToArray(), amountItem.GetInteger()),
                 _ => null
             };
         }

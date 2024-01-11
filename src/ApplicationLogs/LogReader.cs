@@ -1,16 +1,16 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Plugins.ApplicationLogs is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// LogReader.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -25,8 +25,8 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin
     {
-        private DB db;
-        private WriteBatch _writeBatch;
+        private IStore _db;
+        private ISnapshot _snapshot;
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
@@ -46,25 +46,25 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
-            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
+            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
+            _db = system.LoadStore(GetFullPath(path));
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         [RpcMethod]
-        public JObject GetApplicationLog(JArray _params)
+        public JToken GetApplicationLog(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            byte[] value = _db.TryGet(hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
-            var raw = JObject.Parse(Neo.Utility.StrictUTF8.GetString(value));
+            JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
@@ -91,14 +91,19 @@ namespace Neo.Plugins
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-            try
+            var stack = new JArray();
+            foreach (var item in appExec.Stack)
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                try
+                {
+                    stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                }
+                catch (Exception ex)
+                {
+                    stack.Add("error: " + ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                trigger["exception"] = ex.Message;
-            }
+            trigger["stack"] = stack;
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
                 JObject notification = new JObject();
@@ -115,7 +120,7 @@ namespace Neo.Plugins
                 return notification;
             }).ToArray();
 
-            txJson["executions"] = new List<JObject>() { trigger }.ToArray();
+            txJson["executions"] = new[] { trigger };
             return txJson;
         }
 
@@ -134,14 +139,19 @@ namespace Neo.Plugins
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-                    try
+                    var stack = new JArray();
+                    foreach (var item in appExec.Stack)
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                        try
+                        {
+                            stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                        }
+                        catch (Exception ex)
+                        {
+                            stack.Add("error: " + ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        trigger["exception"] = ex.Message;
-                    }
+                    trigger["stack"] = stack;
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
                         JObject notification = new JObject();
@@ -190,7 +200,7 @@ namespace Neo.Plugins
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            db.Write(WriteOptions.Default, _writeBatch);
+            _snapshot?.Commit();
         }
 
         static string GetExceptionMessage(Exception exception)
@@ -200,12 +210,13 @@ namespace Neo.Plugins
 
         private void ResetBatch()
         {
-            _writeBatch = new WriteBatch();
+            _snapshot?.Dispose();
+            _snapshot = _db.GetSnapshot();
         }
 
         private void Put(byte[] key, byte[] value)
         {
-            _writeBatch.Put(key, value);
+            _snapshot.Put(key, value);
         }
     }
 }

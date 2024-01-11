@@ -1,14 +1,15 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcRawMemPool.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,8 +27,8 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = new();
             json["height"] = Height;
-            json["verified"] = new JArray(Verified.Select(p => (JObject)p.ToString()));
-            json["unverified"] = new JArray(UnVerified.Select(p => (JObject)p.ToString()));
+            json["verified"] = new JArray(Verified.Select(p => (JToken)p.ToString()));
+            json["unverified"] = new JArray(UnVerified.Select(p => (JToken)p.ToString()));
             return json;
         }
 

@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// DBFTPlugin.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -11,6 +12,7 @@
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins;
 using Neo.Wallets;
 
@@ -87,7 +89,12 @@ namespace Neo.Consensus
         private bool RemoteNode_MessageReceived(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
-                consensus?.Tell(message.Payload);
+            {
+                Transaction tx = (Transaction)message.Payload;
+                if (tx.SystemFee > settings.MaxBlockSystemFee)
+                    return false;
+                consensus?.Tell(tx);
+            }
             return true;
         }
     }

@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.Wallet.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -10,7 +11,7 @@
 
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -56,14 +57,14 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject CloseWallet(JArray _params)
+        protected virtual JToken CloseWallet(JArray _params)
         {
             wallet = null;
             return true;
         }
 
         [RpcMethod]
-        protected virtual JObject DumpPrivKey(JArray _params)
+        protected virtual JToken DumpPrivKey(JArray _params)
         {
             CheckWallet();
             UInt160 scriptHash = AddressToScriptHash(_params[0].AsString(), system.Settings.AddressVersion);
@@ -72,7 +73,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetNewAddress(JArray _params)
+        protected virtual JToken GetNewAddress(JArray _params)
         {
             CheckWallet();
             WalletAccount account = wallet.CreateAccount();
@@ -82,7 +83,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetWalletBalance(JArray _params)
+        protected virtual JToken GetWalletBalance(JArray _params)
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
@@ -92,7 +93,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetWalletUnclaimedGas(JArray _params)
+        protected virtual JToken GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
@@ -106,7 +107,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject ImportPrivKey(JArray _params)
+        protected virtual JToken ImportPrivKey(JArray _params)
         {
             CheckWallet();
             string privkey = _params[0].AsString();
@@ -123,7 +124,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject CalculateNetworkFee(JArray _params)
+        protected virtual JToken CalculateNetworkFee(JArray _params)
         {
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
@@ -134,7 +135,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject ListAddress(JArray _params)
+        protected virtual JToken ListAddress(JArray _params)
         {
             CheckWallet();
             return wallet.GetAccounts().Select(p =>
@@ -149,7 +150,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject OpenWallet(JArray _params)
+        protected virtual JToken OpenWallet(JArray _params)
         {
             string path = _params[0].AsString();
             string password = _params[1].AsString();
@@ -188,7 +189,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendFrom(JArray _params)
+        protected virtual JToken SendFrom(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
@@ -230,7 +231,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendMany(JArray _params)
+        protected virtual JToken SendMany(JArray _params)
         {
             CheckWallet();
             int to_start = 0;
@@ -281,7 +282,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendToAddress(JArray _params)
+        protected virtual JToken SendToAddress(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
@@ -320,10 +321,61 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeContractVerify(JArray _params)
+        protected virtual JToken CancelTransaction(JArray _params)
+        {
+            CheckWallet();
+            var txid = UInt256.Parse(_params[0].AsString());
+            TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
+            if (state != null)
+            {
+                throw new RpcException(32700, "This tx is already confirmed, can't be cancelled.");
+            }
+
+            var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
+            Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
+            if (!signers.Any())
+            {
+                throw new RpcException(32701, "no signers");
+            }
+
+            Transaction tx = new Transaction
+            {
+                Signers = signers,
+                Attributes = conflict,
+                Witnesses = Array.Empty<Witness>(),
+            };
+
+            try
+            {
+                tx = wallet.MakeTransaction(system.StoreView, new[] { (byte)OpCode.RET }, signers[0].Account, signers, conflict);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new RpcException(-500, GetExceptionMessage(e));
+            }
+
+            if (system.MemPool.TryGetValue(txid, out Transaction conflictTx))
+            {
+                tx.NetworkFee = Math.Max(tx.NetworkFee, conflictTx.NetworkFee) + 1;
+            }
+            else if (_params.Count >= 3)
+            {
+                var extraFee = _params[2].AsString();
+                AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
+                if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
+                {
+                    throw new RpcException(32702, "Incorrect Amount Format");
+                }
+                tx.NetworkFee += (long)decimalExtraFee.Value;
+            };
+            return SignAndRelay(system.StoreView, tx);
+        }
+
+        [RpcMethod]
+        protected virtual JToken InvokeContractVerify(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : Array.Empty<ContractParameter>();
+            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 3 ? WitnessesFromJson((JArray)_params[2]) : null;
             return GetVerificationResult(script_hash, args, signers, witnesses);

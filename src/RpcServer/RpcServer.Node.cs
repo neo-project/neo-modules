@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.Node.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -10,7 +11,7 @@
 
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -23,13 +24,13 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        protected virtual JObject GetConnectionCount(JArray _params)
+        protected virtual JToken GetConnectionCount(JArray _params)
         {
             return localNode.ConnectedCount;
         }
 
         [RpcMethod]
-        protected virtual JObject GetPeers(JArray _params)
+        protected virtual JToken GetPeers(JArray _params)
         {
             JObject json = new();
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
@@ -65,11 +66,10 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetVersion(JArray _params)
+        protected virtual JToken GetVersion(JArray _params)
         {
             JObject json = new();
             json["tcpport"] = localNode.ListenerTcpPort;
-            json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
             json["protocol"] = new JObject();
@@ -82,11 +82,24 @@ namespace Neo.Plugins
             json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
             json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
             json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
+            json["protocol"]["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
+            {
+                JObject forkJson = new();
+                // Strip "HF_" prefix.
+                forkJson["name"] = StripPrefix(hf.Key.ToString(), "HF_");
+                forkJson["blockheight"] = hf.Value;
+                return forkJson;
+            }));
             return json;
         }
 
+        private static string StripPrefix(string s, string prefix)
+        {
+            return s.StartsWith(prefix) ? s.Substring(prefix.Length) : s;
+        }
+
         [RpcMethod]
-        protected virtual JObject SendRawTransaction(JArray _params)
+        protected virtual JToken SendRawTransaction(JArray _params)
         {
             Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
@@ -94,7 +107,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SubmitBlock(JArray _params)
+        protected virtual JToken SubmitBlock(JArray _params)
         {
             Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;

@@ -1,14 +1,15 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcTransaction.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.VM;
 
@@ -53,7 +54,7 @@ namespace Neo.Network.RPC.Models
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
                 transaction.Confirmations = (uint)json["confirmations"].AsNumber();
                 transaction.BlockTime = (ulong)json["blocktime"].AsNumber();
-                transaction.VMState = json["vmstate"]?.TryGetEnum<VMState>();
+                transaction.VMState = json["vmstate"]?.GetEnum<VMState>();
             }
             return transaction;
         }

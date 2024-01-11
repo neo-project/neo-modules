@@ -1,9 +1,20 @@
+// Copyright (C) 2015-2024 The Neo Project.
+//
+// UT_RpcClient.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -67,6 +78,35 @@ namespace Neo.Network.RPC.Tests
                 Assert.AreEqual(-500, ex.HResult);
                 Assert.AreEqual("InsufficientFunds", ex.Message);
             }
+        }
+
+        [TestMethod]
+        public async Task TestNoThrowErrorResponse()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransactionAsync) + "error").ToLower());
+            handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+            handlerMock.Protected()
+               // Setup the PROTECTED method to mock
+               .Setup<Task<HttpResponseMessage>>(
+                  "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>())
+               // prepare the expected response of the mocked http call
+               .ReturnsAsync(new HttpResponseMessage()
+               {
+                   StatusCode = HttpStatusCode.OK,
+                   Content = new StringContent(test.Response.ToJson().ToString()),
+               })
+               .Verifiable();
+
+            var httpClient = new HttpClient(handlerMock.Object);
+            var client = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"), null);
+            var response = await client.SendAsync(test.Request, false);
+
+            Assert.IsNull(response.Result);
+            Assert.IsNotNull(response.Error);
+            Assert.AreEqual(-500, response.Error.Code);
+            Assert.AreEqual("InsufficientFunds", response.Error.Message);
         }
 
         [TestMethod]
@@ -137,7 +177,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestGetBlockHash()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHashAsync).ToLower());
-            var result = await rpc.GetBlockHashAsync((int)test.Request.Params[0].AsNumber());
+            var result = await rpc.GetBlockHashAsync((uint)test.Request.Params[0].AsNumber());
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
@@ -170,7 +210,7 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetCommitteeAsync();
-                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JToken)p).ToArray()).ToString());
             }
         }
 
@@ -201,7 +241,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolAsync).ToLower());
             var result = await rpc.GetRawMempoolAsync();
-            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JToken)p).ToArray()).ToString());
         }
 
         [TestMethod]
@@ -305,7 +345,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunctionAsync).ToLower());
             var result = await rpc.InvokeFunctionAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
-                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson(p)).ToArray());
+                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson((JObject)p)).ToArray());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
 
             // TODO test verify method
@@ -429,7 +469,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)));
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson((JObject)p, rpc.protocolSettings)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 

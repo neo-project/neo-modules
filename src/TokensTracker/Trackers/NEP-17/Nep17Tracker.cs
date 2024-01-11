@@ -1,18 +1,15 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// Nep17Tracker.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -21,6 +18,10 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_17
@@ -141,7 +142,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
 
         [RpcMethod]
-        public JObject GetNep17Transfers(JArray _params)
+        public JToken GetNep17Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -164,7 +165,7 @@ namespace Neo.Plugins.Trackers.NEP_17
         }
 
         [RpcMethod]
-        public JObject GetNep17Balances(JArray _params)
+        public JToken GetNep17Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 

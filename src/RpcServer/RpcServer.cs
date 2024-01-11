@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -15,8 +16,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P;
 using System;
 using System.Collections.Generic;
@@ -33,6 +33,8 @@ namespace Neo.Plugins
 {
     public partial class RpcServer : IDisposable
     {
+        private const int MaxParamsDepth = 32;
+
         private readonly Dictionary<string, Func<JArray, object>> methods = new();
 
         private IWebHost host;
@@ -53,9 +55,14 @@ namespace Neo.Plugins
         {
             if (string.IsNullOrEmpty(settings.RpcUser)) return true;
 
-            context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
-
             string reqauth = context.Request.Headers["Authorization"];
+            if (string.IsNullOrEmpty(reqauth))
+            {
+                context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
+                context.Response.StatusCode = 401;
+                return false;
+            }
+
             string authstring;
             try
             {
@@ -73,7 +80,7 @@ namespace Neo.Plugins
             return authvalues[0] == settings.RpcUser && authvalues[1] == settings.RpcPass;
         }
 
-        private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
+        private static JObject CreateErrorResponse(JToken id, int code, string message, JToken data = null)
         {
             JObject response = CreateResponse(id);
             response["error"] = new JObject();
@@ -84,7 +91,7 @@ namespace Neo.Plugins
             return response;
         }
 
-        private static JObject CreateResponse(JObject id)
+        private static JObject CreateResponse(JToken id)
         {
             JObject response = new();
             response["jsonrpc"] = "2.0";
@@ -106,12 +113,19 @@ namespace Neo.Plugins
         {
             host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
             {
+                // Default value is 5Mb
+                options.Limits.MaxRequestBodySize = settings.MaxRequestBodySize;
+                options.Limits.MaxRequestLineSize = Math.Min(settings.MaxRequestBodySize, options.Limits.MaxRequestLineSize);
                 // Default value is 40
                 options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
+
                 // Default value is 1 minutes
-                options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
+                options.Limits.KeepAliveTimeout = settings.KeepAliveTimeout == -1 ?
+                    TimeSpan.MaxValue :
+                    TimeSpan.FromSeconds(settings.KeepAliveTimeout);
+
                 // Default value is 15 seconds
-                options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+                options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(settings.RequestHeadersTimeout);
 
                 if (string.IsNullOrEmpty(settings.SslCert)) return;
                 listenOptions.UseHttps(settings.SslCert, settings.SslCertPassword, httpsConnectionAdapterOptions =>
@@ -130,11 +144,41 @@ namespace Neo.Plugins
             }))
             .Configure(app =>
             {
+                if (settings.EnableCors)
+                    app.UseCors("All");
+
                 app.UseResponseCompression();
                 app.Run(ProcessAsync);
             })
             .ConfigureServices(services =>
             {
+                if (settings.EnableCors)
+                {
+                    if (settings.AllowOrigins.Length == 0)
+                        services.AddCors(options =>
+                        {
+                            options.AddPolicy("All", policy =>
+                            {
+                                policy.AllowAnyOrigin()
+                                .WithHeaders("Content-Type")
+                                .WithMethods("GET", "POST");
+                                // The CORS specification states that setting origins to "*" (all origins)
+                                // is invalid if the Access-Control-Allow-Credentials header is present.
+                            });
+                        });
+                    else
+                        services.AddCors(options =>
+                        {
+                            options.AddPolicy("All", policy =>
+                            {
+                                policy.WithOrigins(settings.AllowOrigins)
+                                .WithHeaders("Content-Type")
+                                .AllowCredentials()
+                                .WithMethods("GET", "POST");
+                            });
+                        });
+                }
+
                 services.AddResponseCompression(options =>
                 {
                     // options.EnableForHttps = false;
@@ -159,12 +203,8 @@ namespace Neo.Plugins
 
         public async Task ProcessAsync(HttpContext context)
         {
-            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
-            context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
-            context.Response.Headers["Access-Control-Max-Age"] = "31536000";
             if (context.Request.Method != "GET" && context.Request.Method != "POST") return;
-            JObject request = null;
+            JToken request = null;
             if (context.Request.Method == "GET")
             {
                 string jsonrpc = context.Request.Query["jsonrpc"];
@@ -183,7 +223,7 @@ namespace Neo.Plugins
                         request["jsonrpc"] = jsonrpc;
                     request["id"] = id;
                     request["method"] = method;
-                    request["params"] = JObject.Parse(_params);
+                    request["params"] = JToken.Parse(_params, MaxParamsDepth);
                 }
             }
             else if (context.Request.Method == "POST")
@@ -191,11 +231,11 @@ namespace Neo.Plugins
                 using StreamReader reader = new(context.Request.Body);
                 try
                 {
-                    request = JObject.Parse(await reader.ReadToEndAsync());
+                    request = JToken.Parse(await reader.ReadToEndAsync(), MaxParamsDepth);
                 }
                 catch (FormatException) { }
             }
-            JObject response;
+            JToken response;
             if (request == null)
             {
                 response = CreateErrorResponse(null, -32700, "Parse error");
@@ -208,14 +248,14 @@ namespace Neo.Plugins
                 }
                 else
                 {
-                    var tasks = array.Select(p => ProcessRequestAsync(context, p));
+                    var tasks = array.Select(p => ProcessRequestAsync(context, (JObject)p));
                     var results = await Task.WhenAll(tasks);
                     response = results.Where(p => p != null).ToArray();
                 }
             }
             else
             {
-                response = await ProcessRequestAsync(context, request);
+                response = await ProcessRequestAsync(context, (JObject)request);
             }
             if (response == null || (response as JArray)?.Count == 0) return;
             context.Response.ContentType = "application/json";
@@ -225,7 +265,8 @@ namespace Neo.Plugins
         private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
-            if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
+            JToken @params = request["params"] ?? new JArray();
+            if (!request.ContainsProperty("method") || @params is not JArray)
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
@@ -237,10 +278,10 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response["result"] = func((JArray)request["params"]) switch
+                response["result"] = func((JArray)@params) switch
                 {
-                    JObject result => result,
-                    Task<JObject> task => await task,
+                    JToken result => result,
+                    Task<JToken> task => await task,
                     _ => throw new NotSupportedException()
                 };
                 return response;
