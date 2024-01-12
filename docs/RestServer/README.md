@@ -6,6 +6,15 @@ See [config.json](ConfigFile.md) for information about the configurations.
 ## Dependencies
 - **Microsoft.AspNetCore.JsonPatch.dll** `Required`
 - **Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll** `Required`
+- **Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer.dll** `Required`
+- **Microsoft.AspNetCore.Mvc.Versioning.dll** `Required`
+- **Microsoft.OpenApi.dll** `Required`
+- **Newtonsoft.Json.Bson.dll** `Required`
+- **Newtonsoft.Json.dll** `Required`
+- **System.ServiceProcess.ServiceController.dll** `Required`
+- **Microsoft.AspNetCore.Mvc.Versioning.dll** `Required`
+- **Microsoft.AspNetCore.Mvc.Versioning.dll** `Required`
+- **Microsoft.AspNetCore.Mvc.Versioning.dll** `Required`
 - **Microsoft.OpenApi.dll** `Swagger`
 - **Swashbuckle.AspNetCore.Swagger.dll** `Swagger`
 - **Swashbuckle.AspNetCore.SwaggerGen.dll** `Swagger`
@@ -24,7 +33,7 @@ These files go in the same directory as the `RestServer.dll`. In neo-cli
 Custom headers can be added by [Neo RestServer Plugins](Addons.md).
 
 ## JSON Serializer
-`RestServer` uses custom Newtonsoft Json Converters to serialize controller action
+`RestServer` uses custom NewtonSoft JSON Converters to serialize controller action
 responses and `route` parameters.
 
 **One Way Binding** - `Write` only.

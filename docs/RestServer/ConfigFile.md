@@ -21,9 +21,7 @@
 |**EnableSwagger**|_boolean_|_Enables `Swagger` with `Swagger UI` for the rest services._|
 |**MaxPageSize**|_uint32_|_Max page size for searches on `Ledger`/`Contracts` route._|
 |**MaxConcurrentConnections**|_int64_|_Max allow concurrent HTTP connections._|
-|**MaxTransactionFee**|_int64_|_Max transaction fee for `wallet` transfers._|
 |**MaxInvokeGas**|_int64_|_Max gas to be invoked on the `Neo` virtual machine._|
-|**WalletSessionTimeout**|_uint32_|_When `wallet` session expires, in seconds._|
 
 ## Default "Config.json" file
 ```json

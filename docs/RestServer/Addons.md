@@ -1,8 +1,8 @@
 ## RestServer Plugin
-In this secion of you will learn how to make a `neo-cli` plugin that integrates with `RestServer`
+In this section of you will learn how to make a `neo-cli` plugin that integrates with `RestServer`
 plugin. Lets take a look at [Example Plugin](/examples/RestServerPlugin).
 
-- No reference to `RestServer` is reqired.
+- No reference to `RestServer` is required.
 - Requires DotNet 7.0
 
 ## Folder Structure

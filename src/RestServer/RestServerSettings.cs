@@ -42,10 +42,7 @@ namespace Neo.Plugins.RestServer
         public bool EnableSwagger { get; init; }
         public uint MaxPageSize { get; init; }
         public long MaxConcurrentConnections { get; init; }
-        public long MaxTransactionFee { get; init; }
         public long MaxGasInvoke { get; init; }
-        public uint MaxTransactionSize { get; init; }
-        public uint WalletSessionTimeout { get; init; }
         public required JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -73,10 +70,7 @@ namespace Neo.Plugins.RestServer
             EnableSwagger = false,
             MaxPageSize = 50u,
             MaxConcurrentConnections = 40L,
-            MaxTransactionFee = 0_10000000L,
-            MaxGasInvoke = 0_20000000L,
-            MaxTransactionSize = 1024u,
-            WalletSessionTimeout = 120u,
+            MaxGasInvoke = 0_200000000L,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -152,10 +146,7 @@ namespace Neo.Plugins.RestServer
                 EnableSwagger = section.GetValue(nameof(EnableSwagger), Default.EnableSwagger),
                 MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
                 MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
-                MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 MaxGasInvoke = section.GetValue(nameof(MaxGasInvoke), Default.MaxGasInvoke),
-                MaxTransactionSize = section.GetValue(nameof(MaxTransactionSize), Default.MaxTransactionSize),
-                WalletSessionTimeout = section.GetValue(nameof(WalletSessionTimeout), Default.WalletSessionTimeout),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 
