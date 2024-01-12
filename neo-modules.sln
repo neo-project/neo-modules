@@ -43,7 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteWallet", "src\SQLiteW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StorageDumper", "src\StorageDumper\StorageDumper.csproj", "{938D86EA-0F48-436B-9255-4AD9A8E6B9AC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebSocketServer", "src\WebSocketServer\WebSocketServer.csproj", "{BAB59C2B-BBD6-4977-9CEA-FFAD45150204}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WsRpcJsonServer", "src\WebSocketServer\WsRpcJsonServer.csproj", "{BAB59C2B-BBD6-4977-9CEA-FFAD45150204}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

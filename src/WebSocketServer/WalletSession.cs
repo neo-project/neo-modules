@@ -12,7 +12,7 @@
 using Neo.Wallets;
 using System;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     public class WalletSession
     {
@@ -27,6 +27,6 @@ namespace Neo.Plugins
         }
 
         public void ResetExpiration() =>
-            Expires = DateTime.UtcNow.AddSeconds(WebSocketServerSettings.Current?.WalletSessionTimeout ?? WebSocketServerSettings.Default.WalletSessionTimeout);
+            Expires = DateTime.UtcNow.AddSeconds(WsRpcJsonKestrelSettings.Current?.WalletSessionTimeout ?? WsRpcJsonKestrelSettings.Default.WalletSessionTimeout);
     }
 }

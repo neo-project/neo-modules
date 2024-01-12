@@ -11,10 +11,10 @@
 
 using System;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    internal class WebSocketMethodAttribute : Attribute
+    internal class WsRpcJsonMethodAttribute : Attribute
     {
         public string Name { get; set; } = string.Empty;
     }

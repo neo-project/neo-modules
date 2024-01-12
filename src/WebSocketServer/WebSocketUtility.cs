@@ -12,7 +12,7 @@
 using Neo.Wallets;
 using System.Numerics;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     public static class WebSocketUtility
     {
@@ -21,13 +21,22 @@ namespace Neo.Plugins
             if (string.IsNullOrEmpty(addressOrScriptHash))
                 return UInt160.Zero;
 
-            UInt160 scriptHash;
-
-            if (UInt160.TryParse(addressOrScriptHash, out scriptHash) == false)
+            if (UInt160.TryParse(addressOrScriptHash, out var scriptHash) == false)
                 addressOrScriptHash.TryCatch(t => scriptHash = t.ToScriptHash(addressVersion));
 
             return scriptHash ?? UInt160.Zero;
         }
+
+        public static UInt256 TryParseUInt256(string? uInt256String)
+        {
+            if (string.IsNullOrEmpty(uInt256String))
+                return UInt256.Zero;
+
+            _ = UInt256.TryParse(uInt256String, out var hash);
+
+            return hash ?? UInt256.Zero;
+        }
+
 
         public static BigInteger TryParseBigInteger(string value)
         {

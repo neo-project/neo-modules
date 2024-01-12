@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// WebSocketResponseMessageEvent.cs file belongs to the neo project and is free
+// WebSocketChannelType.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -9,9 +9,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
-    public enum WebSocketResponseMessageEvent : byte
+    public enum WebSocketChannelType : byte
     {
         Block = 0x02,               // Blockchain.Committed
         MemoryPool = 0x03,          // MemoryPool
@@ -20,6 +20,5 @@ namespace Neo.Plugins
         AppLog = 0x15,              // ApplicationEngine.Log
         DebugLog = 0x16,            // Utility.Log
         Error = 0x19,               // Error(s)
-        Method = 0x20,              // Result(s) from a method call
     }
 }

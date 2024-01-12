@@ -15,7 +15,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     public class WalletSessionManager : ConcurrentDictionary<Guid, WalletSession>
     {

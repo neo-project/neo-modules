@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// WebSocketServerPlugin.cs file belongs to the neo project and is free
+// WsRpcJsonServer.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -13,10 +13,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.Extensions.DependencyInjection;
 using Neo.Json;
 using Neo.Ledger;
-using Neo.Plugins.WebSocketServer.v1;
+using Neo.Plugins.Models.WsRpcJsonServer;
+using Neo.Plugins.WsRpcJsonServer.Models;
+using Neo.Plugins.WsRpcJsonServer.V1;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     public delegate void WebSocketConnect(Guid clientId);
     public delegate void WebSocketDisconnect(Guid clientId);
@@ -38,14 +39,14 @@ namespace Neo.Plugins
     public delegate void WebSocketMessageReceived(Guid clientId, JToken? json);
     public delegate void WebSocketMessageSent(Guid clientId, JToken? json);
 
-    public class WebSocketServerPlugin : Plugin
+    public class WsRpcJsonServer : Plugin
     {
         #region Global Variables
 
         #region Static
 
         internal static readonly Dictionary<string, Func<JArray, object>> Methods;
-        private static readonly WebSocketConnection<WebSocketClient> _connections;
+        private static readonly WebSocketConnections<WebSocketClient> _connections;
         public static event WebSocketRequest? OnRequest;
         public static event WebSocketServerStarted? OnServerStarted;
 
@@ -76,13 +77,13 @@ namespace Neo.Plugins
         #endregion
 
 
-        static WebSocketServerPlugin()
+        static WsRpcJsonServer()
         {
             _connections = new();
             Methods = new();
         }
 
-        public WebSocketServerPlugin()
+        public WsRpcJsonServer()
         {
             _webSocketOptions = new();
             _notifyEvents = new();
@@ -105,17 +106,17 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            WebSocketServerSettings.Load(GetConfiguration());
+            WsRpcJsonKestrelSettings.Load(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Network != WebSocketServerSettings.Current?.Network)
+            if (system.Settings.Network != WsRpcJsonKestrelSettings.Current?.Network)
                 return;
 
             _neoSystem = system;
 
-            if (WebSocketServerSettings.Current.DebugMode)
+            if (WsRpcJsonKestrelSettings.Current.DebugMode)
             {
                 ApplicationEngine.Log += OnApplicationEngineLog!;
                 Utility.Logging += OnUtilityLogging;
@@ -137,14 +138,24 @@ namespace Neo.Plugins
             if (_connections.IsEmpty)
                 return;
 
+            var allClientChannels = _connections.GetAllChannelsWithClients(WebSocketChannelType.MemoryPool);
+
             _ = Task.Run(async () =>
-                await _connections.SendAllJsonAsync(
-                    WebSocketResponseMessage.Create(
-                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                        e.ToJson(_neoSystem?.Settings),
-                        WebSocketResponseMessageEvent.MemoryPool)
-                    .ToJson())
-                .ConfigureAwait(false));
+            {
+                foreach (var (clientId, channelRequest) in allClientChannels)
+                {
+                    var jsonParams = channelRequest.Value.Params;
+                    var txHash = WebSocketUtility.TryParseUInt256(jsonParams?.AsString());
+                    if (txHash != e.Hash) continue;
+                    await _connections.SendJsonAsync(
+                        clientId,
+                        RpcJsonResponseMessage.Create(
+                            channelRequest.Key,
+                            e.ToJson(_neoSystem?.Settings))
+                        .ToJson()).ConfigureAwait(false);
+                    _connections[clientId].RemoveChannelRequest(channelRequest.Key);
+                }
+            });
         }
 
         private void OnUtilityLogging(string source, LogLevel level, object message)
@@ -152,14 +163,22 @@ namespace Neo.Plugins
             if (_connections.IsEmpty)
                 return;
 
+            var allClientChannels = _connections.GetAllChannelsWithClients(WebSocketChannelType.DebugLog);
+
             _ = Task.Run(async () =>
-                await _connections.SendAllJsonAsync(
-                    WebSocketResponseMessage.Create(
-                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                        WebSocketUtilityLogResult.Create(source, level, message).ToJson(),
-                        WebSocketResponseMessageEvent.DebugLog)
-                    .ToJson())
-                .ConfigureAwait(false));
+            {
+                foreach (var (clientId, channelRequest) in allClientChannels)
+                {
+                    var jsonParams = channelRequest.Value.Params;
+                    var logLevel = jsonParams == null ? null : Enum.Parse<LogLevel?>(jsonParams.AsString());
+                    await _connections.SendToAllJsonAsync(
+                        RpcJsonResponseMessage.Create(
+                            RandomNumberGenerator.GetInt32(2, int.MaxValue),
+                            NeoUtilityLogResult.Create(source, level, message).ToJson())
+                        .ToJson())
+                    .ConfigureAwait(false);
+                }
+            });
         }
 
         private void OnApplicationEngineLog(object sender, LogEventArgs e)
@@ -168,11 +187,10 @@ namespace Neo.Plugins
                 return;
 
             _ = Task.Run(async () =>
-                await _connections.SendAllJsonAsync(
-                    WebSocketResponseMessage.Create(
+                await _connections.SendToAllJsonAsync(
+                    RpcJsonResponseMessage.Create(
                         RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                        e.ToJson(),
-                        WebSocketResponseMessageEvent.AppLog)
+                        e.ToJson())
                     .ToJson())
                 .ConfigureAwait(false));
         }
@@ -204,28 +222,25 @@ namespace Neo.Plugins
                     //   BLOCK->(TRANSACTION->TX_CONTRACT_EVENTS->NEXT)
                     var rId = RandomNumberGenerator.GetInt32(2, int.MaxValue);
 
-                    await _connections.SendAllJsonAsync(
-                        WebSocketResponseMessage.Create(
+                    await _connections.SendToAllJsonAsync(
+                        RpcJsonResponseMessage.Create(
                             rId,
-                            block.Header.ToJson(system.Settings),
-                            WebSocketResponseMessageEvent.Block)
+                            block.Header.ToJson(system.Settings))
                         .ToJson()).ConfigureAwait(false);
 
                     foreach (var tx in block.Transactions)
                     {
-                        await _connections.SendAllJsonAsync(
-                            WebSocketResponseMessage.Create(
+                        await _connections.SendToAllJsonAsync(
+                            RpcJsonResponseMessage.Create(
                                 rId,
-                                tx.ToJson(system.Settings),
-                                WebSocketResponseMessageEvent.Transaction)
+                                tx.ToJson(system.Settings))
                             .ToJson()).ConfigureAwait(false);
 
                         foreach (var n in _notifyEvents.Where(w => w.ScriptContainer.Hash == tx.Hash))
-                            await _connections.SendAllJsonAsync(
-                                WebSocketResponseMessage.Create(
+                            await _connections.SendToAllJsonAsync(
+                                RpcJsonResponseMessage.Create(
                                     rId,
-                                    n.ToJson(),
-                                    WebSocketResponseMessageEvent.ContractNotify)
+                                    n.ToJson())
                                 .ToJson()).ConfigureAwait(false);
                     }
 
@@ -241,7 +256,7 @@ namespace Neo.Plugins
             MethodInfo[] array = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             foreach (MethodInfo methodInfo in array)
             {
-                WebSocketMethodAttribute customAttribute = methodInfo.GetCustomAttribute<WebSocketMethodAttribute>()!;
+                WsRpcJsonMethodAttribute customAttribute = methodInfo.GetCustomAttribute<WsRpcJsonMethodAttribute>()!;
                 if (customAttribute != null)
                 {
                     string key = string.IsNullOrEmpty(customAttribute.Name) ?
@@ -254,22 +269,7 @@ namespace Neo.Plugins
 
         #region Static
 
-        public static void SendAllJson(JToken json, int pluginId)
-        {
-            if (_connections.IsEmpty)
-                return;
-
-            _ = Task.Run(async () =>
-                await _connections.SendAllJsonAsync(
-                    WebSocketResponseMessage.Create(
-                        pluginId,
-                        json,
-                        WebSocketResponseMessageEvent.DebugLog)
-                    .ToJson())
-                .ConfigureAwait(false));
-        }
-
-        public static void SendJson(Guid clientId, int requestId, byte eventId, JToken json)
+        public static void SendJson(Guid clientId, int id, JToken json)
         {
             if (_connections.IsEmpty)
                 return;
@@ -277,26 +277,9 @@ namespace Neo.Plugins
             _ = Task.Run(async () =>
                 await _connections.SendJsonAsync(
                     clientId,
-                    WebSocketResponseMessage.Create(
-                        requestId,
-                        json,
-                        eventId)
-                    .ToJson())
-                .ConfigureAwait(false));
-        }
-
-        public static void SendJson(Guid clientId, int requestId, WebSocketResponseMessageEvent eventId, JToken json)
-        {
-            if (_connections.IsEmpty)
-                return;
-
-            _ = Task.Run(async () =>
-                await _connections.SendJsonAsync(
-                    clientId,
-                    WebSocketResponseMessage.Create(
-                        requestId,
-                        json,
-                        eventId)
+                    RpcJsonResponseMessage.Create(
+                        id,
+                        json)
                     .ToJson())
                 .ConfigureAwait(false));
         }
@@ -314,13 +297,13 @@ namespace Neo.Plugins
             .UseKestrel(options =>
             {
                 options.AddServerHeader = false;
-                options.Listen(WebSocketServerSettings.Current?.BindAddress ?? WebSocketServerSettings.Default.BindAddress, WebSocketServerSettings.Current?.Port ?? WebSocketServerSettings.Default.Port, config =>
+                options.Listen(WsRpcJsonKestrelSettings.Current?.BindAddress ?? WsRpcJsonKestrelSettings.Default.BindAddress, WsRpcJsonKestrelSettings.Current?.Port ?? WsRpcJsonKestrelSettings.Default.Port, config =>
                 {
-                    if (string.IsNullOrEmpty(WebSocketServerSettings.Current?.SslCertFile))
+                    if (string.IsNullOrEmpty(WsRpcJsonKestrelSettings.Current?.SslCertFile))
                         return;
-                    config.UseHttps(WebSocketServerSettings.Current.SslCertFile, WebSocketServerSettings.Current.SslCertPassword, httpsConnectionAdapterOptions =>
+                    config.UseHttps(WsRpcJsonKestrelSettings.Current.SslCertFile, WsRpcJsonKestrelSettings.Current.SslCertPassword, httpsConnectionAdapterOptions =>
                     {
-                        if (WebSocketServerSettings.Current.TrustedAuthorities is null || WebSocketServerSettings.Current.TrustedAuthorities.Length == 0)
+                        if (WsRpcJsonKestrelSettings.Current.TrustedAuthorities is null || WsRpcJsonKestrelSettings.Current.TrustedAuthorities.Length == 0)
                             return;
                         httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                         httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
@@ -328,7 +311,7 @@ namespace Neo.Plugins
                             if (err != SslPolicyErrors.None)
                                 return false;
                             X509Certificate2 authority = chain!.ChainElements[^1].Certificate;
-                            return WebSocketServerSettings.Current.TrustedAuthorities.Contains(authority!.Thumbprint);
+                            return WsRpcJsonKestrelSettings.Current.TrustedAuthorities.Contains(authority!.Thumbprint);
                         };
                     });
                 });
@@ -339,9 +322,9 @@ namespace Neo.Plugins
             //})
             .Configure(app =>
             {
-                _webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(WebSocketServerSettings.Current?.ConcurrentProxyTimeout ?? WebSocketServerSettings.Default.ConcurrentProxyTimeout);
+                _webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(WsRpcJsonKestrelSettings.Current?.ConcurrentProxyTimeout ?? WsRpcJsonKestrelSettings.Default.ConcurrentProxyTimeout);
 
-                foreach (var origin in WebSocketServerSettings.Current?.AllowOrigins ?? WebSocketServerSettings.Default.AllowOrigins)
+                foreach (var origin in WsRpcJsonKestrelSettings.Current?.AllowOrigins ?? WsRpcJsonKestrelSettings.Default.AllowOrigins)
                     _webSocketOptions.AllowedOrigins.Add(origin);
 
                 app.UseWebSockets(_webSocketOptions);
@@ -356,7 +339,7 @@ namespace Neo.Plugins
 
         private async Task ProcessRequestsAsync(HttpContext context)
         {
-            if (WebSocketServerSettings.Current?.EnableBasicAuthentication ?? WebSocketServerSettings.Default.EnableBasicAuthentication)
+            if (WsRpcJsonKestrelSettings.Current?.EnableBasicAuthentication ?? WsRpcJsonKestrelSettings.Default.EnableBasicAuthentication)
             {
                 if (IsAuthorized(context) == false)
                 {
@@ -388,17 +371,17 @@ namespace Neo.Plugins
             var authHeader = context.Request.Headers.Authorization;
             if (string.IsNullOrEmpty(authHeader) == false && AuthenticationHeaderValue.TryParse(authHeader, out var authValue))
             {
-                if (authValue.Scheme.Equals("basic", StringComparison.OrdinalIgnoreCase) && authValue.Parameter != null)
+                if (authValue.Scheme.Equals("basic", StringComparison.InvariantCultureIgnoreCase) && authValue.Parameter != null)
                 {
                     try
                     {
                         var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
                         var creds = decodedParams.Split(':', 2);
-                        if (creds[0] == WebSocketServerSettings.Current?.User && creds[1] == WebSocketServerSettings.Current?.Pass)
+                        if (creds[0] == WsRpcJsonKestrelSettings.Current?.User && creds[1] == WsRpcJsonKestrelSettings.Current?.Pass)
                             return true;
 
                     }
-                    catch (FormatException)
+                    catch
                     {
                     }
                 }

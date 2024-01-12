@@ -23,7 +23,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using static Neo.Ledger.Blockchain;
 
-namespace Neo.Plugins.WebSocketServer.v1;
+namespace Neo.Plugins.WsRpcJsonServer.V1;
 
 internal class WalletMethods
 {
@@ -35,10 +35,10 @@ internal class WalletMethods
     {
         _neoSystem = neoSystem;
         _walletSessionManager = new();
-        WebSocketServerPlugin.RegisterMethods(this);
+        WsRpcJsonServer.RegisterMethods(this);
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletOpen(JArray _params)
     {
         if (_params.Count != 2)
@@ -64,7 +64,7 @@ internal class WalletMethods
         };
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletClose(JArray _params)
     {
         if (_params.Count != 1)
@@ -86,7 +86,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletExport(JArray _params)
     {
         if (_params.Count != 1)
@@ -116,7 +116,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletCreateNewAccount(JArray _params)
     {
         if (_params.Count == 0)
@@ -160,7 +160,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletBalance(JArray _params)
     {
         if (_params.Count != 3)
@@ -199,7 +199,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletUnClaimedGas(JArray _params)
     {
         if (_params.Count != 2)
@@ -237,7 +237,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletImport(JArray _params)
     {
         if (_params.Count != 2)
@@ -275,7 +275,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletListAddresses(JArray _params)
     {
         if (_params.Count != 1)
@@ -310,7 +310,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletDeleteAccount(JArray _params)
     {
         if (_params.Count != 2)
@@ -345,7 +345,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletTransferAssets(JArray _params)
     {
         if (_params.Count != 5)
@@ -412,7 +412,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletCreate(JArray _params)
     {
         if (_params.Count != 3)
@@ -449,7 +449,7 @@ internal class WalletMethods
         };
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletMultiSigImport(JArray _params)
     {
         if (_params.Count != 3)
@@ -495,7 +495,7 @@ internal class WalletMethods
             throw new WebSocketException(-32602, "Invalid params");
     }
 
-    [WebSocketMethod]
+    [WsRpcJsonMethod]
     public JToken WalletAssets(JArray _params)
     {
         if (_params.Count != 1)

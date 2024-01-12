@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// WebSocketUtilityLogResult.cs file belongs to the neo project and is free
+// NeoUtilityLogResult.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -11,15 +11,15 @@
 
 using Neo.Json;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer.Models
 {
-    internal class WebSocketUtilityLogResult
+    internal class NeoUtilityLogResult
     {
         public string? SourceName { get; init; }
         public LogLevel LogLevel { get; init; }
         public object? Message { get; init; }
 
-        public static WebSocketUtilityLogResult Create(string sourceName, LogLevel level, object message) =>
+        public static NeoUtilityLogResult Create(string sourceName, LogLevel level, object message) =>
             new()
             {
                 SourceName = sourceName,

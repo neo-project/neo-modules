@@ -13,9 +13,10 @@ using Neo.Json;
 using Neo.SmartContract;
 using Neo.VM;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     public static class WebSocketExtensions
     {
@@ -54,5 +55,12 @@ namespace Neo.Plugins
             {
             }
         }
+
+        internal static IEnumerable<(Guid, KeyValuePair<int, WebSocketChannel>)> GetAllChannelsWithClients<TClient>(this WebSocketConnections<TClient> connections, WebSocketChannelType channelType)
+        where TClient : WebSocketClient, new() =>
+            connections.Keys
+                .Zip(connections.Values
+                    .SelectMany(s => s.EventChannels)
+                    .Where(w => w.Value.ChannelType == channelType));
     }
 }

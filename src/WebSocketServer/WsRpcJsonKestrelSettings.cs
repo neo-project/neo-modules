@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// WebSocketServerSettings.cs file belongs to the neo project and is free
+// WsRpcJsonKestrelSettings.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -13,9 +13,9 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Net;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
-    public class WebSocketServerSettings
+    public class WsRpcJsonKestrelSettings
     {
         public uint Network { get; private init; }
         public IPAddress BindAddress { get; private set; } = IPAddress.Loopback;
@@ -33,7 +33,7 @@ namespace Neo.Plugins
         public uint WalletSessionTimeout { get; private init; }
         public bool DebugMode { get; private init; }
 
-        public static WebSocketServerSettings Default => new()
+        public static WsRpcJsonKestrelSettings Default => new()
         {
             Network = 5195086u,
             BindAddress = IPAddress.Loopback,
@@ -52,7 +52,7 @@ namespace Neo.Plugins
             DebugMode = false,
         };
 
-        public static WebSocketServerSettings? Current { get; private set; }
+        public static WsRpcJsonKestrelSettings? Current { get; private set; }
 
         internal static void Load(IConfigurationSection section)
         {

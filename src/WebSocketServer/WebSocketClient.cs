@@ -11,26 +11,31 @@
 
 using Neo.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
     internal class WebSocketClient : IDisposable, IEquatable<WebSocketClient>
     {
         public WebSocket? Socket { get; init; }
+        public ConcurrentDictionary<int, WebSocketChannel> EventChannels { get; } = new();
 
         public bool IsConnected =>
             Socket != null &&
             Socket.State == WebSocketState.Open;
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Socket?.Dispose();
             GC.SuppressFinalize(this);
         }
+
+        public void RemoveChannelRequest(int jsonRpcId) =>
+            EventChannels.TryRemove(jsonRpcId, out _);
 
         public async Task SendJsonAsync(JToken message)
         {

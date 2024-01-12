@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// WebSocketConnection.cs file belongs to the neo project and is free
+// WebSocketConnections.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -10,6 +10,8 @@
 // modifications are permitted.
 
 using Neo.Json;
+using Neo.Plugins.Models.WsRpcJsonServer;
+using Neo.Plugins.WsRpcJsonServer.Models;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -22,9 +24,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.WsRpcJsonServer
 {
-    internal class WebSocketConnection<TClient> : IDictionary<Guid, TClient>, IDisposable
+    internal class WebSocketConnections<TClient> : IDictionary<Guid, TClient>, IDisposable
         where TClient : WebSocketClient, new()
     {
         private readonly ConcurrentDictionary<Guid, TClient> _clients;
@@ -34,7 +36,7 @@ namespace Neo.Plugins
         public static event WebSocketConnect? OnConnect;
         public static event WebSocketDisconnect? OnDisconnect;
 
-        public WebSocketConnection()
+        public WebSocketConnections()
         {
             _clients = new();
         }
@@ -110,7 +112,7 @@ namespace Neo.Plugins
             }
         }
 
-        public async Task SendAllJsonAsync(JToken message)
+        public async Task SendToAllJsonAsync(JToken message)
         {
             if (_clients.IsEmpty)
                 return;
@@ -128,15 +130,15 @@ namespace Neo.Plugins
 
                 while (client.CloseStatus.HasValue == false)
                 {
-                    var requestId = -1; // System wide (-1 for system error)
+                    var rpcJsonId = -1; // System wide (-1 for system error)
                     try
                     {
                         var message = await ReceiveMessageAsync(clientId, client).ConfigureAwait(false);
                         if (message is not null)
                         {
-                            requestId = message.RequestId;
+                            rpcJsonId = message.Id;
 
-                            if (WebSocketServerPlugin.Methods.TryGetValue(message.Method!, out var callMethod) == false)
+                            if (WsRpcJsonServer.Methods.TryGetValue(message.Method!, out var callMethod) == false)
                                 throw new WebSocketException(-32601, "Method not found");
 
                             var obj = callMethod(message.Params!);
@@ -144,9 +146,9 @@ namespace Neo.Plugins
                             if (obj is Task<JToken> responseTask)
                                 obj = await responseTask.ConfigureAwait(false);
 
-                            obj = WebSocketResponseMessage.Create(message.RequestId, (JToken)obj, WebSocketResponseMessageEvent.Method);
+                            obj = RpcJsonResponseMessage.Create(message.Id, (JToken)obj);
 
-                            await SendJsonAsync(clientId, ((WebSocketResponseMessage)obj).ToJson()).ConfigureAwait(false);
+                            await SendJsonAsync(clientId, ((RpcJsonResponseMessage)obj).ToJson()).ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
@@ -155,10 +157,9 @@ namespace Neo.Plugins
                         ex = ex.InnerException ?? ex;
                         await SendJsonAsync(
                             clientId,
-                            WebSocketResponseMessage.Create(
-                                requestId,
-                                WebSocketErrorResult.Create(ex).ToJson(),
-                                WebSocketResponseMessageEvent.Error)
+                            RpcJsonResponseMessage.Create(
+                                rpcJsonId,
+                                WebSocketErrorResult.Create(ex).ToJson())
                             .ToJson());
                     }
                 }
@@ -182,9 +183,9 @@ namespace Neo.Plugins
                 await TryRemoveAsync(kvp.Key, WebSocketCloseStatus.NormalClosure).ConfigureAwait(false);
         }
 
-        private static async Task<WebSocketRequestMessage> ReceiveMessageAsync(Guid clientId, WebSocket client)
+        private static async Task<RpcJsonRequestMessage> ReceiveMessageAsync(Guid clientId, WebSocket client)
         {
-            var buffer = new byte[WebSocketServerSettings.Current?.MessageSize ?? WebSocketServerSettings.Default.MessageSize]; // 4096 bytes
+            var buffer = new byte[WsRpcJsonKestrelSettings.Current?.MessageSize ?? WsRpcJsonKestrelSettings.Default.MessageSize]; // 4096 bytes
             WebSocketReceiveResult? receiveResult = null;
 
             using var ms = new MemoryStream();
@@ -201,7 +202,7 @@ namespace Neo.Plugins
 
                 OnMessageReceived?.TryCatch(t => t.Invoke(clientId, json));
 
-                return WebSocketRequestMessage.FromJson(json);
+                return RpcJsonRequestMessage.FromJson(json);
             }
             catch
             {

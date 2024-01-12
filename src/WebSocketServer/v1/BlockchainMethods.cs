@@ -23,7 +23,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using static Neo.Ledger.Blockchain;
 
-namespace Neo.Plugins.WebSocketServer.v1
+namespace Neo.Plugins.WsRpcJsonServer.V1
 {
     internal class BlockchainMethods
     {
@@ -35,10 +35,10 @@ namespace Neo.Plugins.WebSocketServer.v1
         {
             _neoSystem = neoSystem;
             _localNode = _neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
-            WebSocketServerPlugin.RegisterMethods(this);
+            WsRpcJsonServer.RegisterMethods(this);
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetBlockHeader(JArray _params)
         {
             if (_params.Count != 1)
@@ -58,7 +58,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             return block.Header.ToJson(_neoSystem.Settings);
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetBlock(JArray _params)
         {
             if (_params.Count != 1)
@@ -78,7 +78,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             return block.ToJson(_neoSystem.Settings);
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetTransaction(JArray _params)
         {
             if (_params.Count != 1)
@@ -96,7 +96,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             return tx.ToJson(_neoSystem.Settings);
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetContract(JArray _params)
         {
             if (_params.Count != 1)
@@ -116,7 +116,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             return contractState.ToJson();
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetPeers(JArray _params)
         {
             if (_params.Count != 0)
@@ -137,7 +137,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             };
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetVersion(JArray _params)
         {
             if (_params.Count != 0)
@@ -151,7 +151,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             };
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken GetProtocolSettings(JArray _params)
         {
             if (_params.Count != 0)
@@ -179,7 +179,7 @@ namespace Neo.Plugins.WebSocketServer.v1
             };
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken SendRawTransaction(JArray _params)
         {
             if (_params.Count != 1)
@@ -199,7 +199,7 @@ namespace Neo.Plugins.WebSocketServer.v1
                 throw new WebSocketException(-500, $"{reason}");
         }
 
-        [WebSocketMethod]
+        [WsRpcJsonMethod]
         public JToken InvokeContract(JArray _params)
         {
             UInt160 scriptHash = UInt160.Zero;
@@ -246,7 +246,7 @@ namespace Neo.Plugins.WebSocketServer.v1
                 Attributes = Array.Empty<TransactionAttribute>(),
             };
 
-            using var engine = ApplicationEngine.Run(script, snapshot, container: tx, settings: _neoSystem.Settings, gas: WebSocketServerSettings.Current?.MaxGasInvoke ?? WebSocketServerSettings.Default.MaxGasInvoke);
+            using var engine = ApplicationEngine.Run(script, snapshot, container: tx, settings: _neoSystem.Settings, gas: WsRpcJsonKestrelSettings.Current?.MaxGasInvoke ?? WsRpcJsonKestrelSettings.Default.MaxGasInvoke);
 
             return new JObject()
             {
