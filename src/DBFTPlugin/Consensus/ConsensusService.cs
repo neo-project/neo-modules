@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// ConsensusService.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -45,7 +46,7 @@ namespace Neo.Consensus
         /// This will be cleared every block (so it will not grow out of control, but is used to prevent repeatedly
         /// responding to the same message.
         /// </summary>
-        private readonly HashSet<UInt256> knownHashes = new HashSet<UInt256>();
+        private readonly HashSet<UInt256> knownHashes = new();
         /// <summary>
         /// This variable is only true during OnRecoveryMessageReceived
         /// </summary>
@@ -263,7 +264,38 @@ namespace Neo.Consensus
         {
             if (verify)
             {
-                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
+                // At this step we're sure that there's no on-chain transaction that conflicts with
+                // the provided tx because of the previous Blockchain's OnReceive check. Thus, we only
+                // need to check that current context doesn't contain conflicting transactions.
+                VerifyResult result;
+
+                // Firstly, check whether tx has Conlicts attribute with the hash of one of the context's transactions.
+                foreach (var h in tx.GetAttributes<Conflicts>().Select(attr => attr.Hash))
+                {
+                    if (context.TransactionHashes.Contains(h))
+                    {
+                        result = VerifyResult.HasConflicts;
+                        Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                        RequestChangeView(ChangeViewReason.TxInvalid);
+                        return false;
+                    }
+                }
+                // After that, check whether context's transactions have Conflicts attribute with tx's hash.
+                foreach (var pooledTx in context.Transactions.Values)
+                {
+                    if (pooledTx.GetAttributes<Conflicts>().Select(attr => attr.Hash).Contains(tx.Hash))
+                    {
+                        result = VerifyResult.HasConflicts;
+                        Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                        RequestChangeView(ChangeViewReason.TxInvalid);
+                        return false;
+                    }
+                }
+
+                // We've ensured that there's no conlicting transactions in the context, thus, can safely provide an empty conflicting list
+                // for futher verification.
+                var conflictingTxs = new List<Transaction>();
+                result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext, conflictingTxs);
                 if (result != VerifyResult.Succeed)
                 {
                     Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);

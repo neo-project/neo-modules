@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcNativeContract.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -11,7 +12,6 @@
 using Neo.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
-using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
@@ -21,7 +21,6 @@ namespace Neo.Network.RPC.Models
         public UInt160 Hash { get; set; }
         public NefFile Nef { get; set; }
         public ContractManifest Manifest { get; set; }
-        public uint[] UpdateHistory { get; set; }
 
         public static RpcNativeContract FromJson(JObject json)
         {
@@ -30,8 +29,7 @@ namespace Neo.Network.RPC.Models
                 Id = (int)json["id"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Nef = RpcNefFile.FromJson((JObject)json["nef"]),
-                Manifest = ContractManifest.FromJson((JObject)json["manifest"]),
-                UpdateHistory = ((JArray)json["updatehistory"]).Select(u => (uint)u.GetInt32()).ToArray()
+                Manifest = ContractManifest.FromJson((JObject)json["manifest"])
             };
         }
 
@@ -42,8 +40,7 @@ namespace Neo.Network.RPC.Models
                 ["id"] = Id,
                 ["hash"] = Hash.ToString(),
                 ["nef"] = Nef.ToJson(),
-                ["manifest"] = Manifest.ToJson(),
-                ["updatehistory"] = new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray())
+                ["manifest"] = Manifest.ToJson()
             };
         }
     }

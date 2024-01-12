@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Plugins.ApplicationLogs is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// LogReader.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -90,14 +91,19 @@ namespace Neo.Plugins
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-            try
+            var stack = new JArray();
+            foreach (var item in appExec.Stack)
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                try
+                {
+                    stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                }
+                catch (Exception ex)
+                {
+                    stack.Add("error: " + ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                trigger["exception"] = ex.Message;
-            }
+            trigger["stack"] = stack;
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
                 JObject notification = new JObject();
@@ -133,14 +139,19 @@ namespace Neo.Plugins
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-                    try
+                    var stack = new JArray();
+                    foreach (var item in appExec.Stack)
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                        try
+                        {
+                            stack.Add(item.ToJson(Settings.Default.MaxStackSize));
+                        }
+                        catch (Exception ex)
+                        {
+                            stack.Add("error: " + ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        trigger["exception"] = ex.Message;
-                    }
+                    trigger["stack"] = stack;
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
                         JObject notification = new JObject();
