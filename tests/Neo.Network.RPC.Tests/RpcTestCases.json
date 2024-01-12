@@ -2471,7 +2471,6 @@
       "result": {
         "network": 0,
         "tcpport": 20333,
-        "wsport": 20334,
         "nonce": 592651621,
         "useragent": "/Neo:3.0.0-rc1/",
         "protocol": {
