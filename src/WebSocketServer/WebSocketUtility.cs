@@ -16,7 +16,7 @@ namespace Neo.Plugins.WsRpcJsonServer
 {
     public static class WebSocketUtility
     {
-        public static UInt160 TryParseScriptHash(string addressOrScriptHash, byte addressVersion)
+        public static UInt160 TryParseScriptHash(string? addressOrScriptHash, byte addressVersion)
         {
             if (string.IsNullOrEmpty(addressOrScriptHash))
                 return UInt160.Zero;

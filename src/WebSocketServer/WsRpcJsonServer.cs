@@ -25,7 +25,6 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -170,13 +169,17 @@ namespace Neo.Plugins.WsRpcJsonServer
                 foreach (var (clientId, channelRequest) in allClientChannels)
                 {
                     var jsonParams = channelRequest.Value.Params;
-                    var logLevel = jsonParams == null ? null : Enum.Parse<LogLevel?>(jsonParams.AsString());
-                    await _connections.SendToAllJsonAsync(
-                        RpcJsonResponseMessage.Create(
-                            RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                            NeoUtilityLogResult.Create(source, level, message).ToJson())
-                        .ToJson())
-                    .ConfigureAwait(false);
+                    if (jsonParams != null)
+                    {
+                        var logLevel = Enum.Parse<LogLevel>(jsonParams.AsString());
+                        await _connections.SendJsonAsync(
+                            clientId,
+                            RpcJsonResponseMessage.Create(
+                                channelRequest.Key,
+                                NeoUtilityLogResult.Create(source, level, message).ToJson())
+                            .ToJson())
+                        .ConfigureAwait(false);
+                    }
                 }
             });
         }
@@ -186,13 +189,31 @@ namespace Neo.Plugins.WsRpcJsonServer
             if (_connections.IsEmpty)
                 return;
 
+            if (e.ScriptContainer?.Hash == null)
+                return;
+
+            var allClientChannels = _connections.GetAllChannelsWithClients(WebSocketChannelType.AppLog);
+
             _ = Task.Run(async () =>
-                await _connections.SendToAllJsonAsync(
-                    RpcJsonResponseMessage.Create(
-                        RandomNumberGenerator.GetInt32(2, int.MaxValue),
-                        e.ToJson())
-                    .ToJson())
-                .ConfigureAwait(false));
+            {
+                foreach (var (clientId, channelRequest) in allClientChannels)
+                {
+                    var jsonParams = channelRequest.Value.Params;
+                    if (jsonParams != null)
+                    {
+                        var contractHash = WebSocketUtility.TryParseScriptHash(jsonParams.AsString(), _neoSystem!.Settings.AddressVersion);
+                        if (contractHash == e.ScriptHash)
+                        {
+                            await _connections.SendToAllJsonAsync(
+                                RpcJsonResponseMessage.Create(
+                                    channelRequest.Key,
+                                    e.ToJson())
+                                .ToJson())
+                            .ConfigureAwait(false);
+                        }
+                    }
+                }
+            });
         }
 
         private void OnBlockchainCommitting(
@@ -215,36 +236,68 @@ namespace Neo.Plugins.WsRpcJsonServer
             if (_connections.IsEmpty)
                 return;
 
-            _ = Task.Run(async () =>
+            _connections.AsParallel().ForAll(async conn =>
+            {
+                var allClientChannels = conn.Value.EventChannels
+                    .Where(w =>
+                        w.Value.ChannelType == WebSocketChannelType.Block ||
+                        w.Value.ChannelType == WebSocketChannelType.Transaction ||
+                        w.Value.ChannelType == WebSocketChannelType.ContractNotify);
+
+                foreach (var channelRequest in allClientChannels)
                 {
-                    // DO NOT CHANGE SYNCING ORDER IN THIS ASYNC METHOD!
-                    // SHOULD BE:
-                    //   BLOCK->(TRANSACTION->TX_CONTRACT_EVENTS->NEXT)
-                    var rId = RandomNumberGenerator.GetInt32(2, int.MaxValue);
-
-                    await _connections.SendToAllJsonAsync(
-                        RpcJsonResponseMessage.Create(
-                            rId,
-                            block.Header.ToJson(system.Settings))
-                        .ToJson()).ConfigureAwait(false);
-
-                    foreach (var tx in block.Transactions)
+                    var jsonParams = channelRequest.Value.Params;
+                    if (jsonParams != null)
                     {
-                        await _connections.SendToAllJsonAsync(
-                            RpcJsonResponseMessage.Create(
-                                rId,
-                                tx.ToJson(system.Settings))
-                            .ToJson()).ConfigureAwait(false);
-
-                        foreach (var n in _notifyEvents.Where(w => w.ScriptContainer.Hash == tx.Hash))
-                            await _connections.SendToAllJsonAsync(
-                                RpcJsonResponseMessage.Create(
-                                    rId,
-                                    n.ToJson())
-                                .ToJson()).ConfigureAwait(false);
+                        switch (channelRequest.Value.ChannelType)
+                        {
+                            case WebSocketChannelType.Block:
+                                {
+                                    await _connections.SendJsonAsync(
+                                            conn.Key,
+                                            RpcJsonResponseMessage.Create(
+                                                channelRequest.Key,
+                                                block.Header.ToJson(system.Settings))
+                                            .ToJson()).ConfigureAwait(false);
+                                    break;
+                                }
+                            case WebSocketChannelType.Transaction:
+                                {
+                                    var txHash = WebSocketUtility.TryParseUInt256(jsonParams?.AsString());
+                                    var tx = block.Transactions.SingleOrDefault(s => s.Hash == txHash);
+                                    if (tx != null)
+                                    {
+                                        await _connections.SendJsonAsync(
+                                            conn.Key,
+                                            RpcJsonResponseMessage.Create(
+                                                channelRequest.Key,
+                                                tx.ToJson(system.Settings))
+                                            .ToJson()).ConfigureAwait(false);
+                                        _connections[conn.Key].RemoveChannelRequest(channelRequest.Key);
+                                    }
+                                    break;
+                                }
+                            case WebSocketChannelType.ContractNotify:
+                                {
+                                    var contractHash = WebSocketUtility.TryParseScriptHash(jsonParams?.AsString(), system.Settings.AddressVersion);
+                                    var contractEvents = _notifyEvents.Where(w => w.ScriptHash == contractHash);
+                                    foreach (var contractEvent in contractEvents)
+                                    {
+                                        await _connections.SendJsonAsync(
+                                            conn.Key,
+                                            RpcJsonResponseMessage.Create(
+                                                channelRequest.Key,
+                                                contractEvent.ToJson())
+                                            .ToJson()).ConfigureAwait(false);
+                                    }
+                                    break;
+                                }
+                            default:
+                                break;
+                        }
                     }
-
-                }).ConfigureAwait(false);
+                }
+            });
         }
 
         #endregion

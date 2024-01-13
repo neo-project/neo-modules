@@ -56,8 +56,9 @@ namespace Neo.Plugins.WsRpcJsonServer
             }
         }
 
-        internal static IEnumerable<(Guid, KeyValuePair<int, WebSocketChannel>)> GetAllChannelsWithClients<TClient>(this WebSocketConnections<TClient> connections, WebSocketChannelType channelType)
-        where TClient : WebSocketClient, new() =>
+        internal static IEnumerable<(Guid, KeyValuePair<int, WebSocketChannel>)> GetAllChannelsWithClients<TClient>(
+            this WebSocketConnections<TClient> connections,
+            WebSocketChannelType channelType) where TClient : WebSocketClient, new() =>
             connections.Keys
                 .Zip(connections.Values
                     .SelectMany(s => s.EventChannels)
