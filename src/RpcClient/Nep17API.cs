@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// Nep17API.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -132,15 +133,18 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
+        /// <param name="addAssert">Add assert at the end of the script</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null, bool addAssert = true)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
+            if (addAssert) script = script.Concat(new[] { (byte)OpCode.ASSERT }).ToArray();
 
-            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
+            TransactionManagerFactory factory = new(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+
             return await manager
                 .AddSignature(fromKey)
                 .SignAsync().ConfigureAwait(false);
@@ -156,17 +160,20 @@ namespace Neo.Network.RPC
         /// <param name="to">to account</param>
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
+        /// <param name="addAssert">Add assert at the end of the script</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null, bool addAssert = true)
         {
             if (m > fromKeys.Length)
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
+            if (addAssert) script = script.Concat(new[] { (byte)OpCode.ASSERT }).ToArray();
 
-            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
+            TransactionManagerFactory factory = new(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+
             return await manager
                 .AddMultiSig(fromKeys, m, pubKeys)
                 .SignAsync().ConfigureAwait(false);

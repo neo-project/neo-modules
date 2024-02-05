@@ -1,12 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <RootNamespace>Neo.Plugins.Storage.Tests</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\..\src\RocksDBStore\RocksDBStore.csproj" />
   </ItemGroup>
-
 </Project>

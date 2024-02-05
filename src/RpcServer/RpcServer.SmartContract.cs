@@ -1,8 +1,9 @@
-// Copyright (C) 2015-2023 The Neo Project.
+// Copyright (C) 2015-2024 The Neo Project.
 //
-// The Neo.Network.RPC is free software distributed under the MIT software license,
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php
+// RpcServer.SmartContract.cs file belongs to the neo project and is free
+// software distributed under the MIT software license, see the
+// accompanying file LICENSE in the main directory of the
+// repository or http://www.opensource.org/licenses/mit-license.php
 // for more details.
 //
 // Redistribution and use in source and binary forms with or without
@@ -23,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Array = System.Array;
 
 namespace Neo.Plugins
 {
@@ -92,14 +94,19 @@ namespace Neo.Plugins
                         ["storagechanges"] = ToJson(session.Engine.Snapshot.GetChangeSet())
                     };
                 }
-                try
+                var stack = new JArray();
+                foreach (var item in session.Engine.ResultStack)
                 {
-                    json["stack"] = new JArray(session.Engine.ResultStack.Select(p => ToJson(p, session)));
+                    try
+                    {
+                        stack.Add(ToJson(item, session));
+                    }
+                    catch (Exception ex)
+                    {
+                        stack.Add("error: " + ex.Message);
+                    }
                 }
-                catch (InvalidOperationException)
-                {
-                    json["stack"] = "error: invalid operation";
-                }
+                json["stack"] = stack;
                 if (session.Engine.State != VMState.FAULT)
                 {
                     ProcessInvokeWithWallet(json, signers);
@@ -165,13 +172,18 @@ namespace Neo.Plugins
 
         private static Signer[] SignersFromJson(JArray _params, ProtocolSettings settings)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             var ret = _params.Select(u => new Signer
             {
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
-                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
-                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
-                Rules = ((JArray)u["rules"])?.Select(r => WitnessRule.FromJson((JObject)r)).ToArray(),
+                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray() ?? Array.Empty<UInt160>(),
+                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray() ?? Array.Empty<ECPoint>(),
+                Rules = ((JArray)u["rules"])?.Select(r => WitnessRule.FromJson((JObject)r)).ToArray() ?? Array.Empty<WitnessRule>(),
             }).ToArray();
 
             // Validate format
@@ -183,6 +195,11 @@ namespace Neo.Plugins
 
         private static Witness[] WitnessesFromJson(JArray _params)
         {
+            if (_params.Count > Transaction.MaxTransactionAttributes)
+            {
+                throw new RpcException(-100, "Max allowed witness exceeded.");
+            }
+
             return _params.Select(u => new
             {
                 Invocation = u["invocation"]?.AsString(),
