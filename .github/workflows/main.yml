@@ -35,9 +35,24 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  Release:
-    if: github.ref == 'refs/heads/master' && startsWith(github.repository, 'neo-project/')
+  Review:
     needs: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: AI Code Reviewer
+        uses: freeedcom/ai-codereviewer@a9a064dfa1db8c83f40ef63f6e247fa09c935ed6
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_MODEL: "gpt-4" # Optional: defaults to "gpt-4"
+          exclude: "**/*.json, **/*.md" # Optional: exclude patterns separated by commas
+
+  Release:
+    needs: Test
+    if: github.ref == 'refs/heads/master' && startsWith(github.repository, 'neo-project/')
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
