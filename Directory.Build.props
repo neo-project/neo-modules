@@ -11,7 +11,9 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/neo-project/neo-modules.git</RepositoryUrl>
 	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Neo" Version="3.6.2" ExcludeAssets="runtime" />
-	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\neo\src\Neo\Neo.csproj" />
+  </ItemGroup>
+
 </Project>
