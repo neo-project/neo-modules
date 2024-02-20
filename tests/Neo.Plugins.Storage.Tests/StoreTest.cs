@@ -49,7 +49,7 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestLevelDb()
         {
-            using var plugin = new LevelDBStore();
+            using var plugin = new LevelDBStorePlugin();
             TestPersistenceDelete(plugin.GetStore(path_leveldb));
             // Test all with the same store
 
@@ -66,7 +66,7 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestRocksDb()
         {
-            using var plugin = new RocksDBStore();
+            using var plugin = new RocksDBStorePlugin();
             TestPersistenceDelete(plugin.GetStore(path_rocksdb));
             // Test all with the same store
 

@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// RocksDBStore.cs file belongs to the neo project and is free
+// Store.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -10,25 +10,68 @@
 // modifications are permitted.
 
 using Neo.Persistence;
+using RocksDbSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Neo.Plugins.Storage
 {
-    public class RocksDBStore : Plugin, IStoreProvider
+    internal class RocksDBStore : IStore
     {
-        public override string Description => "Uses RocksDBStore to store the blockchain data";
+        private readonly RocksDb db;
 
-        public RocksDBStore()
+        public RocksDBStore(string path)
         {
-            StoreFactory.RegisterProvider(this);
+            db = RocksDb.Open(Options.Default, Path.GetFullPath(path));
         }
 
-        /// <summary>
-        /// Get store
-        /// </summary>
-        /// <returns>RocksDbStore</returns>
-        public IStore GetStore(string path)
+        public void Dispose()
         {
-            return new Store(path);
+            db.Dispose();
+        }
+
+        public ISnapshot GetSnapshot()
+        {
+            return new Snapshot(db);
+        }
+
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
+        {
+            if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
+
+            using var it = db.NewIterator();
+            if (direction == SeekDirection.Forward)
+                for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
+                    yield return (it.Key(), it.Value());
+            else
+                for (it.SeekForPrev(keyOrPrefix); it.Valid(); it.Prev())
+                    yield return (it.Key(), it.Value());
+        }
+
+        public bool Contains(byte[] key)
+        {
+            return db.Get(key, Array.Empty<byte>(), 0, 0) >= 0;
+        }
+
+        public byte[] TryGet(byte[] key)
+        {
+            return db.Get(key);
+        }
+
+        public void Delete(byte[] key)
+        {
+            db.Remove(key);
+        }
+
+        public void Put(byte[] key, byte[] value)
+        {
+            db.Put(key, value);
+        }
+
+        public void PutSync(byte[] key, byte[] value)
+        {
+            db.Put(key, value, writeOptions: Options.WriteDefaultSync);
         }
     }
 }
