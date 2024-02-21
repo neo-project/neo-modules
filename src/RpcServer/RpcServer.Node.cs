@@ -73,17 +73,22 @@ namespace Neo.Plugins
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
             json["protocol"] = new JObject();
-            // system settings
-            json["protocol"]["addressversion"] = system.Settings.AddressVersion;
-            json["protocol"]["network"] = system.Settings.Network;
-            json["protocol"]["validatorscount"] = system.Settings.ValidatorsCount;
-            json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
-            json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
-            json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
-            json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
-            json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
-            json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
-            json["protocol"]["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
+            // rpc settings
+            JObject rpc = new();
+            rpc["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
+            rpc["sessionenabled"] = settings.SessionEnabled;
+            // protocol settings
+            JObject protocol = new();
+            protocol["addressversion"] = system.Settings.AddressVersion;
+            protocol["network"] = system.Settings.Network;
+            protocol["validatorscount"] = system.Settings.ValidatorsCount;
+            protocol["msperblock"] = system.Settings.MillisecondsPerBlock;
+            protocol["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
+            protocol["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
+            protocol["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
+            protocol["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
+            protocol["initialgasdistribution"] = system.Settings.InitialGasDistribution;
+            protocol["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
             {
                 JObject forkJson = new();
                 // Strip "HF_" prefix.
@@ -91,11 +96,8 @@ namespace Neo.Plugins
                 forkJson["blockheight"] = hf.Value;
                 return forkJson;
             }));
-            // rpc settings
-            JObject rpc = new();
-            rpc["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
-            rpc["sessionenabled"] = settings.SessionEnabled;
-            json["protocol"]["rpc"] = rpc;
+            protocol["rpc"] = rpc;
+            json["protocol"] = protocol;
             return json;
         }
 
