@@ -73,6 +73,7 @@ namespace Neo.Plugins
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
             json["protocol"] = new JObject();
+            // system settings
             json["protocol"]["addressversion"] = system.Settings.AddressVersion;
             json["protocol"]["network"] = system.Settings.Network;
             json["protocol"]["validatorscount"] = system.Settings.ValidatorsCount;
@@ -82,6 +83,7 @@ namespace Neo.Plugins
             json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
             json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
             json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
+            // hardforks
             json["protocol"]["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
             {
                 JObject forkJson = new();
@@ -90,6 +92,9 @@ namespace Neo.Plugins
                 forkJson["blockheight"] = hf.Value;
                 return forkJson;
             }));
+            // rpc settings
+            json["protocol"]["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
+            json["protocol"]["sessionenabled"] = settings.SessionEnabled;
             return json;
         }
 
