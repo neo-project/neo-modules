@@ -83,7 +83,6 @@ namespace Neo.Plugins
             json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
             json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
             json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
-            // hardforks
             json["protocol"]["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
             {
                 JObject forkJson = new();
