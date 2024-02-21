@@ -92,8 +92,10 @@ namespace Neo.Plugins
                 return forkJson;
             }));
             // rpc settings
-            json["protocol"]["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
-            json["protocol"]["sessionenabled"] = settings.SessionEnabled;
+            JObject rpc = new();
+            rpc["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
+            rpc["sessionenabled"] = settings.SessionEnabled;
+            json["protocol"]["rpc"] = rpc;
             return json;
         }
 
