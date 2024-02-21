@@ -75,7 +75,7 @@ namespace Neo.Plugins
             json["protocol"] = new JObject();
             // rpc settings
             JObject rpc = new();
-            rpc["maxiteratorresultitems "] = settings.MaxIteratorResultItems;
+            rpc["maxiteratorresultitems"] = settings.MaxIteratorResultItems;
             rpc["sessionenabled"] = settings.SessionEnabled;
             // protocol settings
             JObject protocol = new();
