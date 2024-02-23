@@ -38,7 +38,7 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         format: lcov
-        file: ${GITHUB_WORKSPACE}/coverage/lcov.net7.0.info        
+        file: ${GITHUB_WORKSPACE}/coverage/lcov.info        
 
   Review:
     needs: Test
