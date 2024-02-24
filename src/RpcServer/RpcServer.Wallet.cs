@@ -126,10 +126,12 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken CalculateNetworkFee(JArray _params)
         {
-            byte[] tx = Convert.FromBase64String(_params[0].AsString());
+            var tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new();
-            long networkfee = (wallet ?? new DummyWallet(system.Settings)).CalculateNetworkFee(system.StoreView, tx.AsSerializable<Transaction>());
+            var networkfee = Wallets.Helper.CalculateNetworkFee(
+                tx.AsSerializable<Transaction>(), system.StoreView, system.Settings,
+                wallet is not null ? a => wallet.GetAccount(a).Contract.Script : null);
             account["networkfee"] = networkfee.ToString();
             return account;
         }
