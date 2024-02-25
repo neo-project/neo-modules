@@ -96,7 +96,7 @@ namespace Neo.Plugins
                 forkJson["blockheight"] = hf.Value;
                 return forkJson;
             }));
-            protocol["rpc"] = rpc;
+            json["rpc"] = rpc;
             json["protocol"] = protocol;
             return json;
         }
