@@ -72,7 +72,6 @@ namespace Neo.Plugins
             json["tcpport"] = localNode.ListenerTcpPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
-            json["protocol"] = new JObject();
             // rpc settings
             JObject rpc = new();
             rpc["maxiteratorresultitems"] = settings.MaxIteratorResultItems;
