@@ -33,14 +33,17 @@ namespace Neo.Plugins
             return json;
         }
 
-        public static JObject NativeContractToJson(this NativeContract contract, ProtocolSettings settings)
+        public static JObject NativeContractToJson(this NativeContract contract, NeoSystem system)
         {
+            var state = contract.GetContractState(system.Settings,
+                NativeContract.Ledger.CurrentIndex(system.StoreView));
+
             return new JObject
             {
                 ["id"] = contract.Id,
                 ["hash"] = contract.Hash.ToString(),
-                ["nef"] = contract.Nef.ToJson(),
-                ["manifest"] = contract.Manifest.ToJson()
+                ["nef"] = state.Nef.ToJson(),
+                ["manifest"] = state.Manifest.ToJson()
             };
         }
     }
