@@ -9,11 +9,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus

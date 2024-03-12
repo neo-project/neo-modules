@@ -9,12 +9,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Linq;
 using Akka.Actor;
 using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using System;
+using System.Linq;
 
 namespace Neo.Consensus
 {

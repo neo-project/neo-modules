@@ -9,14 +9,14 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.Linq;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.Linq;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
