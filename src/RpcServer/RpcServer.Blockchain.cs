@@ -333,7 +333,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetNativeContracts(JArray _params)
         {
-            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(system.Settings)));
+            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(system)));
         }
     }
 }
