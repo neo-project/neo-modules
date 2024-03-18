@@ -232,6 +232,113 @@ namespace Neo.Plugins
             return SignAndRelay(snapshot, tx);
         }
 
+
+        [RpcMethod]
+        protected virtual JToken BuildTransferTx(JArray _params)
+        {
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 from = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
+            UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
+            BigInteger amount = BigInteger.Parse(_params[3].AsString());
+            Signer[] signers = _params.Count > 4 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+            long? networkFee = _params.Count > 5 && long.TryParse(_params[5]?.AsString(), out var net) ? net : null;
+            long? sysFee = _params.Count > 6 && long.TryParse(_params[6]?.AsString(), out var sys) ? sys : null;
+            uint? untilBlock = _params.Count > 7 && uint.TryParse(_params[7]?.AsString(), out var height) ? height : null;
+            return SendWithoutSign(assetId, from, to, amount, signers, networkFee, sysFee, untilBlock);
+        }
+
+        [RpcMethod]
+        protected virtual JToken SignTx(JArray _params)
+        {
+            CheckWallet();
+            var snapshot = system.StoreView;
+            ContractParametersContext context = ContractParametersContext.FromJson((JObject)_params[0], snapshot);
+            if (context.Network != system.Settings.Network)
+            {
+                throw new RpcException(-100, $"Invalid network id:{context.Network}");
+            }
+            if (!wallet.Sign(context))
+            {
+                throw new RpcException(-100, $"Non-existent private key in wallet.");
+            }
+            var json = new JObject();
+            var tx = (Transaction)context.Verifiable;
+            json["sign_context"] = context.ToJson();
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
+                json["tx_raw"] = Convert.ToBase64String(tx.ToArray());
+            }
+            tx.Witnesses ??= Array.Empty<Witness>();
+            json["tx"] = tx.ToJson(system.Settings);
+            return json;
+        }
+
+        private JObject SendWithoutSign(UInt160 assetId, UInt160 from, UInt160 to, BigInteger amount, Signer[] signers, long? networkFee = null, long? sysFee = null, uint? untilBlock = null)
+        {
+            using var snapshot = system.GetSnapshot();
+            var sb = new ScriptBuilder();
+            sb.EmitDynamicCall(assetId, "transfer", from, to, amount, null);
+            sb.Emit(OpCode.ASSERT);
+            var script = sb.ToArray();
+            Random rand = new();
+            Transaction tx = new Transaction()
+            {
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Nonce = (uint)rand.Next(),
+                Signers = signers,
+                Script = script,
+                Witnesses = Array.Empty<Witness>(),
+                ValidUntilBlock = untilBlock ?? NativeContract.Ledger.CurrentIndex(snapshot) + system.Settings.MaxValidUntilBlockIncrement,
+            };
+
+            if (sysFee.HasValue)
+            {
+                tx.SystemFee = sysFee.Value;
+            }
+            else
+            {
+                // will try to execute 'transfer' script to check if it works 
+                using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot.CreateSnapshot(), tx, settings: system.Settings, gas: ApplicationEngine.TestModeGas);
+                if (engine.State == VMState.FAULT)
+                {
+                    throw new InvalidOperationException($"Failed execution for '{script.ToHexString()}'", engine.FaultException);
+                }
+                tx.SystemFee = engine.GasConsumed;
+            }
+            tx.NetworkFee = networkFee ?? QuickCalculateNetworkFee(system.StoreView, tx);
+
+            ContractParametersContext transContext = new(snapshot, tx, settings.Network);
+            var json = new JObject();
+            json["sign_context"] = transContext.ToJson();
+            json["tx"] = tx.ToJson(system.Settings);
+            return json;
+        }
+
+        /// <summary>
+        /// treat signer as single Signature
+        /// </summary>
+        /// <param name="snapshot"></param>
+        /// <param name="tx"></param>
+        /// <returns></returns>
+        private long QuickCalculateNetworkFee(DataCache snapshot, Transaction tx)
+        {
+            UInt160[] hashes = tx.GetScriptHashesForVerifying(snapshot);
+            // base size for transaction: includes const_header + signers + attributes + script + hashes
+            int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Attributes.GetVarSize() + tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+            uint exec_fee_factor = NativeContract.Policy.GetExecFeeFactor(snapshot);
+            long networkFee = 0;
+            foreach (UInt160 hash in hashes)
+            {
+                //witness length
+                size += 67 + 41;
+                networkFee += exec_fee_factor * SmartContract.Helper.SignatureContractCost();
+            }
+            networkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
+            return networkFee;
+        }
+
+
         [RpcMethod]
         protected virtual JToken SendMany(JArray _params)
         {
