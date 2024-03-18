@@ -33,7 +33,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetBlock(JArray _params)
         {
-            JToken key = _params[0];
+            JToken key = Result.Ok_Or(() => _params[0], RpcError.InvalidParams.WithData($"Invalid Block Hash or Index: {_params[0]}"));
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             using var snapshot = system.GetSnapshot();
             Block block;
@@ -47,8 +47,7 @@ namespace Neo.Plugins
                 UInt256 hash = UInt256.Parse(key.AsString());
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
-            if (block == null)
-                throw new RpcException(-100, "Unknown block");
+            block.NotNull_Or(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = Utility.BlockToJson(block, system.Settings);
@@ -76,13 +75,13 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetBlockHash(JArray _params)
         {
-            uint height = uint.Parse(_params[0].AsString());
+            uint height = Result.Ok_Or(() => uint.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Height: {_params[0]}"));
             var snapshot = system.StoreView;
             if (height <= NativeContract.Ledger.CurrentIndex(snapshot))
             {
                 return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
             }
-            throw new RpcException(-100, "Invalid Height");
+            throw new RpcException(RpcError.UnknownHeight);
         }
 
         [RpcMethod]
@@ -95,16 +94,13 @@ namespace Neo.Plugins
             if (key is JNumber)
             {
                 uint height = uint.Parse(key.AsString());
-                header = NativeContract.Ledger.GetHeader(snapshot, height);
+                header = NativeContract.Ledger.GetHeader(snapshot, height).NotNull_Or(RpcError.UnknownBlock);
             }
             else
             {
                 UInt256 hash = UInt256.Parse(key.AsString());
-                header = NativeContract.Ledger.GetHeader(snapshot, hash);
+                header = NativeContract.Ledger.GetHeader(snapshot, hash).NotNull_Or(RpcError.UnknownBlock);
             }
-            if (header == null)
-                throw new RpcException(-100, "Unknown block");
-
             if (verbose)
             {
                 JObject json = header.ToJson(system.Settings);
@@ -124,13 +120,13 @@ namespace Neo.Plugins
             if (int.TryParse(_params[0].AsString(), out int contractId))
             {
                 var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
-                return contracts?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+                return contracts?.ToJson().NotNull_Or(RpcError.UnknownContract);
             }
             else
             {
                 UInt160 script_hash = ToScriptHash(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-                return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+                return contract?.ToJson().NotNull_Or(RpcError.UnknownContract);
             }
         }
 
@@ -165,14 +161,14 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetRawTransaction(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Transaction Hash: {_params[0]}"));
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             if (system.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
                 return Convert.ToBase64String(tx.ToArray());
             var snapshot = system.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
-            if (tx is null) throw new RpcException(-100, "Unknown transaction");
+            tx.NotNull_Or(RpcError.UnknownTransaction);
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
             JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
@@ -192,8 +188,7 @@ namespace Neo.Plugins
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash).NotNull_Or(RpcError.UnknownContract);
                 id = contract.Id;
             }
             byte[] key = Convert.FromBase64String(_params[1].AsString());
@@ -201,8 +196,7 @@ namespace Neo.Plugins
             {
                 Id = id,
                 Key = key
-            });
-            if (item is null) throw new RpcException(-100, "Unknown storage");
+            }).NotNull_Or(RpcError.UnknownStorageItem);
             return Convert.ToBase64String(item.Value.Span);
         }
 
@@ -213,8 +207,7 @@ namespace Neo.Plugins
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash).NotNull_Or(RpcError.UnknownContract);
                 id = contract.Id;
             }
 
@@ -259,10 +252,10 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetTransactionHeight(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Transaction Hash: {_params[0]}"));
             uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
-            throw new RpcException(-100, "Unknown transaction");
+            throw new RpcException(RpcError.UnknownTransaction);
         }
 
         [RpcMethod]
@@ -288,15 +281,24 @@ namespace Neo.Plugins
             {
                 script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
             }
-            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+            StackItem[] resultstack;
+            try
+            {
+                using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+                resultstack = engine.ResultStack.ToArray();
+            }
+            catch
+            {
+                throw new RpcException(RpcError.InternalServerError.WithData("Can't get candidates."));
+            }
+
             JObject json = new();
             try
             {
-                var resultstack = engine.ResultStack.ToArray();
                 if (resultstack.Length > 0)
                 {
                     JArray jArray = new();
-                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount) ?? throw new RpcException(RpcError.InternalServerError.WithData("Can't get next block validators."));
 
                     foreach (var item in resultstack)
                     {
@@ -314,10 +316,11 @@ namespace Neo.Plugins
                     }
                 }
             }
-            catch (InvalidOperationException)
+            catch
             {
-                json["exception"] = "Invalid result.";
+                throw new RpcException(RpcError.InternalServerError.WithData("Can't get next block validators"));
             }
+
             return json;
         }
 

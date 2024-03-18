@@ -220,24 +220,22 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (status != OracleStatus.Running) throw new InvalidOperationException();
+            status.Equals(OracleStatus.Running).True_Or(RpcError.OracleDisabled);
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
-            ulong requestId = (ulong)_params[1].AsNumber();
-            byte[] txSign = Convert.FromBase64String(_params[2].AsString());
-            byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
+            ulong requestId = Result.Ok_Or(() => (ulong)_params[1].AsNumber(), RpcError.InvalidParams.WithData($"Invalid requestId: {_params[1]}"));
+            byte[] txSign = Result.Ok_Or(() => Convert.FromBase64String(_params[2].AsString()), RpcError.InvalidParams.WithData($"Invalid txSign: {_params[2]}"));
+            byte[] msgSign = Result.Ok_Or(() => Convert.FromBase64String(_params[3].AsString()), RpcError.InvalidParams.WithData($"Invalid msgSign: {_params[3]}"));
 
-            if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
+            finishedCache.ContainsKey(requestId).False_Or(RpcError.OracleRequestFinished);
 
             using (var snapshot = System.GetSnapshot())
             {
                 uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
-                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
-                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(-100, "Request is not found");
+                oracles.Any(p => p.Equals(oraclePub)).True_Or(RpcErrorFactory.OracleNotDesignatedNode(oraclePub));
+                NativeContract.Oracle.GetRequest(snapshot, requestId).NotNull_Or(RpcError.OracleRequestNotFound);
                 var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
-
+                Crypto.VerifySignature(data, msgSign, oraclePub).True_Or(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             }
             return new JObject();
@@ -497,7 +495,7 @@ namespace Neo.Plugins
             else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Network), sign, oraclePub))
                 task.BackupSigns.TryAdd(oraclePub, sign);
             else
-                throw new RpcException(-100, "Invalid response transaction sign");
+                throw new RpcException(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
 
             if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
             {
