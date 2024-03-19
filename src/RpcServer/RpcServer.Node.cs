@@ -53,15 +53,59 @@ namespace Neo.Plugins
 
         private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
         {
-            if (reason == VerifyResult.Succeed)
+
+            switch (reason)
             {
-                var ret = new JObject();
-                ret["hash"] = hash.ToString();
-                return ret;
-            }
-            else
-            {
-                throw new RpcException(-500, reason.ToString());
+                case VerifyResult.Succeed:
+                    {
+                        var ret = new JObject();
+                        ret["hash"] = hash.ToString();
+                        return ret;
+                    }
+                case VerifyResult.AlreadyExists:
+                    {
+                        throw new RpcException(RpcError.AlreadyExists.WithData(reason.ToString()));
+                    }
+                case VerifyResult.AlreadyInPool:
+                    {
+                        throw new RpcException(RpcError.AlreadyInPool.WithData(reason.ToString()));
+                    }
+                case VerifyResult.OutOfMemory:
+                    {
+                        throw new RpcException(RpcError.MempoolCapReached.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidScript:
+                    {
+                        throw new RpcException(RpcError.InvalidScript.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidAttribute:
+                    {
+                        throw new RpcException(RpcError.InvalidAttribute.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidSignature:
+                    {
+                        throw new RpcException(RpcError.InvalidSignature.WithData(reason.ToString()));
+                    }
+                case VerifyResult.OverSize:
+                    {
+                        throw new RpcException(RpcError.InvalidSize.WithData(reason.ToString()));
+                    }
+                case VerifyResult.Expired:
+                    {
+                        throw new RpcException(RpcError.ExpiredTransaction.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InsufficientFunds:
+                    {
+                        throw new RpcException(RpcError.InsufficientFunds.WithData(reason.ToString()));
+                    }
+                case VerifyResult.PolicyFail:
+                    {
+                        throw new RpcException(RpcError.PolicyFailed.WithData(reason.ToString()));
+                    }
+                default:
+                    {
+                        throw new RpcException(RpcError.VerificationFailed.WithData(reason.ToString()));
+                    }
             }
         }
 
@@ -108,7 +152,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken SendRawTransaction(JArray _params)
         {
-            Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
+            Transaction tx = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>(), RpcError.InvalidParams.WithData($"Invalid Transaction Format: {_params[0]}"));
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
             return GetRelayResult(reason.Result, tx.Hash);
         }
@@ -116,7 +160,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken SubmitBlock(JArray _params)
         {
-            Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
+            Block block = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>(), RpcError.InvalidParams.WithData($"Invalid Block Format: {_params[0]}"));
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }

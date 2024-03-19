@@ -157,7 +157,7 @@ namespace Neo.Consensus
                     return;
                 }
             }
-            InitializeConsensus(0);
+            InitializeConsensus(context.ViewNumber);
             // Issue a recovery request on start-up in order to possibly catch up with other nodes
             if (!context.WatchOnly)
                 RequestRecovery();
