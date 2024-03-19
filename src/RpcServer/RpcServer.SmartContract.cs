@@ -174,7 +174,7 @@ namespace Neo.Plugins
         {
             if (_params.Count > Transaction.MaxTransactionAttributes)
             {
-                throw new RpcException(-100, "Max allowed witness exceeded.");
+                throw new RpcException(RpcError.InvalidParams.WithData("Max allowed witness exceeded."));
             }
 
             var ret = _params.Select(u => new Signer
@@ -197,7 +197,7 @@ namespace Neo.Plugins
         {
             if (_params.Count > Transaction.MaxTransactionAttributes)
             {
-                throw new RpcException(-100, "Max allowed witness exceeded.");
+                throw new RpcException(RpcError.InvalidParams.WithData("Max allowed witness exceeded."));
             }
 
             return _params.Select(u => new
@@ -214,8 +214,8 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            string operation = _params[1].AsString();
+            UInt160 script_hash = Result.Ok_Or(() => UInt160.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid script hash {nameof(script_hash)}"));
+            string operation = Result.Ok_Or(() => _params[1].AsString(), RpcError.InvalidParams);
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
@@ -232,7 +232,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken InvokeScript(JArray _params)
         {
-            byte[] script = Convert.FromBase64String(_params[0].AsString());
+            byte[] script = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()), RpcError.InvalidParams);
             Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 2 ? WitnessesFromJson((JArray)_params[1]) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
@@ -242,18 +242,18 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TraverseIterator(JArray _params)
         {
-            Guid sid = Guid.Parse(_params[0].GetString());
-            Guid iid = Guid.Parse(_params[1].GetString());
+            settings.SessionEnabled.True_Or(RpcError.SessionsDisabled);
+            Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData($"Invalid session id {nameof(sid)}"));
+            Guid iid = Result.Ok_Or(() => Guid.Parse(_params[1].GetString()), RpcError.InvalidParams.WithData($"Invliad iterator id {nameof(iid)}"));
             int count = _params[2].GetInt32();
-            if (count > settings.MaxIteratorResultItems)
-                throw new ArgumentOutOfRangeException(nameof(count));
+            Result.True_Or(() => count > settings.MaxIteratorResultItems, RpcError.InvalidParams.WithData($"Invalid iterator items count {nameof(count)}"));
             Session session;
             lock (sessions)
             {
-                session = sessions[sid];
+                session = Result.Ok_Or(() => sessions[sid], RpcError.UnknownSession);
                 session.ResetExpiration();
             }
-            IIterator iterator = session.Iterators[iid];
+            IIterator iterator = Result.Ok_Or(() => session.Iterators[iid], RpcError.UnknownIterator);
             JArray json = new();
             while (count-- > 0 && iterator.Next())
                 json.Add(iterator.Value(null).ToJson());
@@ -263,11 +263,15 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TerminateSession(JArray _params)
         {
-            Guid sid = Guid.Parse(_params[0].GetString());
-            Session session;
+            settings.SessionEnabled.True_Or(RpcError.SessionsDisabled);
+            Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData("Invalid session id"));
+
+            Session session = null;
             bool result;
             lock (sessions)
-                result = sessions.Remove(sid, out session);
+            {
+                result = Result.Ok_Or(() => sessions.Remove(sid, out session), RpcError.UnknownSession);
+            }
             if (result) session.Dispose();
             return result;
         }
@@ -275,19 +279,10 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetUnclaimedGas(JArray _params)
         {
-            string address = _params[0].AsString();
+            string address = Result.Ok_Or(() => _params[0].AsString(), RpcError.InvalidParams.WithData($"Invalid address {nameof(address)}"));
             JObject json = new();
-            UInt160 script_hash;
-            try
-            {
-                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
-            }
-            catch
-            {
-                script_hash = null;
-            }
-            if (script_hash == null)
-                throw new RpcException(-100, "Invalid address");
+            UInt160 script_hash = Result.Ok_Or(() => AddressToScriptHash(address, system.Settings.AddressVersion), RpcError.InvalidParams);
+
             var snapshot = system.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
             json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);

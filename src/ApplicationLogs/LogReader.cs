@@ -59,10 +59,8 @@ namespace Neo.Plugins
         [RpcMethod]
         public JToken GetApplicationLog(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = _db.TryGet(hash.ToArray());
-            if (value is null)
-                throw new RpcException(-100, "Unknown transaction/blockhash");
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid transaction hash: {_params[0]}"));
+            byte[] value = _db.TryGet(hash.ToArray()).NotNull_Or(RpcError.UnknownScriptContainer);
 
             JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
