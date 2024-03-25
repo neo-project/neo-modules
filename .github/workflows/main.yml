@@ -30,11 +30,11 @@ jobs:
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
         EXCLUDED_TESTS=\"[Neo]*,[Neo.IO]*,[Neo.Json]*,[Neo.VM]*,[Neo.Extensions]*,[Neo.Cryptography.BLS12_381]*\"
         EXPECTED_COVERAGE_FILENAME=coverage.net8.0.json
-        dotnet test tests/Neo.Network.RPC.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage /p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.RpcServer.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage/lcov/${EXPECTED_COVERAGE_FILENAME}
-        dotnet test tests/Neo.Plugins.Storage.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage/lcov/${EXPECTED_COVERAGE_FILENAME}
-        dotnet test tests/Neo.Cryptography.MPTTrie.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage/lcov/${EXPECTED_COVERAGE_FILENAME}
-        dotnet test tests/Neo.Plugins.OracleService.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WO/RKSPACE}/coverage/lcov/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Network.RPC.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Plugins.RpcServer.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/lcov/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Plugins.Storage.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/lcov/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Cryptography.MPTTrie.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/lcov/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Plugins.OracleService.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/lcov/${EXPECTED_COVERAGE_FILENAME} /p:CoverletOutputFormat=lcov
     - name: Coveralls
       uses: coverallsapp/github-action@v2.2.3
       with:
