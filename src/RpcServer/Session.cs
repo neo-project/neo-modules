@@ -16,6 +16,7 @@ using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
+using Neo.VM;
 
 namespace Neo.Plugins
 {
@@ -41,6 +42,12 @@ namespace Neo.Plugins
                 Witnesses = witnesses
             };
             Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: gas, diagnostic: diagnostic);
+            if (Engine.State == VMState.HALT && tx != null)
+            {
+                tx.SystemFee = Engine.GasConsumed;
+                tx.NetworkFee = 1_00000000;
+                Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: Engine.GasConsumed, diagnostic: diagnostic);
+            }
             ResetExpiration();
         }
 
