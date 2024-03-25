@@ -94,7 +94,7 @@ namespace Neo.Plugins
                 if (raw == null)
                     raw = TransactionToJObject(hash);
                 if (raw == null)
-                    throw new RpcException( RpcError.InvalidParams.WithData("Unknown transaction/blockhash"));
+                    throw new RpcException(RpcError.InvalidParams.WithData("Unknown transaction/blockhash"));
 
                 if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType triggerType))
                 {
