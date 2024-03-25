@@ -28,7 +28,7 @@ jobs:
       run: |
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
-        EXCLUDED_TESTS=\"[Neo]*,[Neo.IO]*,[Neo.Json]*,[Neo.VM]*,[Neo.Extensions]*,[Neo.Cryptography.BLS12_381]*\"
+        EXCLUDED_TESTS="[Neo]*,[Neo.IO]*,[Neo.Json]*,[Neo.VM]*,[Neo.Extensions]*,[Neo.Cryptography.BLS12_381]*"
         EXPECTED_COVERAGE_FILENAME=coverage.net8.0.json
         dotnet test tests/Neo.Network.RPC.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join /p:Exclude=${EXCLUDED_TESTS}
         dotnet test tests/Neo.Plugins.RpcServer.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/${EXPECTED_COVERAGE_FILENAME}
