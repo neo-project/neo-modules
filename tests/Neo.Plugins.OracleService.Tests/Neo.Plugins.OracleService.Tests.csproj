@@ -2,10 +2,11 @@
   <PropertyGroup>
     <PackageId>OracleService.Tests</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Akka.TestKit" Version="1.5.14" />
-    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.14" />
+    <PackageReference Include="Akka.TestKit" Version="1.5.18" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.18" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\OracleService\OracleService.csproj" />
@@ -20,5 +21,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
   </ItemGroup>
 </Project>
