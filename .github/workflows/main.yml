@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  DOTNET_VERSION: 7.0.x
+  DOTNET_VERSION: 8.0.x
 
 jobs:
 
@@ -29,17 +29,18 @@ jobs:
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
         EXCLUDED_TESTS=\"[Neo]*,[Neo.IO]*,[Neo.Json]*,[Neo.VM]*,[Neo.Extensions]*,[Neo.Cryptography.BLS12_381]*\"
-        dotnet test tests/Neo.Network.RPC.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ -p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.RpcServer.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.Storage.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Cryptography.MPTTrie.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.OracleService.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov  /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json /p:CoverletOutputFormat=lcov -p:Exclude=${EXCLUDED_TESTS}
+        EXPECTED_COVERAGE_FILENAME=coverage.net8.0.json
+        dotnet test tests/Neo.Network.RPC.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Plugins.RpcServer.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Plugins.Storage.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/  /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Cryptography.MPTTrie.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/${EXPECTED_COVERAGE_FILENAME}
+        dotnet test tests/Neo.Plugins.OracleService.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov/ /p:Exclude=${EXCLUDED_TESTS} /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/${EXPECTED_COVERAGE_FILENAME} /p:CoverletOutputFormat=lcov
     - name: Coveralls
       uses: coverallsapp/github-action@v2.2.3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         format: lcov
-        file: ${GITHUB_WORKSPACE}/coverage/lcov.info        
+        file: ${GITHUB_WORKSPACE}/coverage/lcov.net8.0.info
 
   Review:
     needs: Test
@@ -81,7 +82,7 @@ jobs:
         prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}
     - name: Setup .NET Core
       if: steps.check_tag.outputs.statusCode == '404'
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
     - name: Publish to NuGet
