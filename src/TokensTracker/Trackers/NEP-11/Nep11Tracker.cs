@@ -93,7 +93,18 @@ namespace Neo.Plugins.Trackers.NEP_11
                         Log($"{state.Hash} is not nft!", LogLevel.Warning);
                         continue;
                     }
-
+                    if (balanceMethod != null &&
+                        !(balanceMethod.Parameters[0].Type == ContractParameterType.Hash160 && balanceMethod.ReturnType == ContractParameterType.Integer))
+                    {
+                        Log($"{state.Hash} is not nft:balance1!", LogLevel.Warning);
+                        continue;
+                    }
+                    if (balanceMethod2 != null &&
+                        !(balanceMethod2.Parameters[0].Type == ContractParameterType.Hash160 && balanceMethod2.Parameters[1].Type == ContractParameterType.ByteArray && balanceMethod2.ReturnType == ContractParameterType.Integer))
+                    {
+                        Log($"{state.Hash} is not nft:balance2!", LogLevel.Warning);
+                        continue;
+                    }
                     var isDivisible = balanceMethod2 != null;
                     contracts[transferRecord.asset] = (isDivisible, state);
                 }
