@@ -29,17 +29,17 @@ jobs:
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
         EXCLUDED_TESTS=\"[Neo]*,[Neo.IO]*,[Neo.Json]*,[Neo.VM]*,[Neo.Extensions]*,[Neo.Cryptography.BLS12_381]*\"
-        dotnet test tests/Neo.Network.RPC.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.net8.0.json /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.RpcServer.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.net8.0.json /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.Storage.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.net8.0.json /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Cryptography.MPTTrie.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.net8.0.json /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS}
-        dotnet test tests/Neo.Plugins.OracleService.Tests --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.net8.0.json /p:CoverletOutputFormat=lcov /p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Network.RPC.Tests --framework net8.0 --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ -p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Plugins.RpcServer.Tests --framework net8.0 --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Plugins.Storage.Tests --framework net8.0 --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Cryptography.MPTTrie.Tests --framework net8.0 --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage-join/ /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json -p:Exclude=${EXCLUDED_TESTS}
+        dotnet test tests/Neo.Plugins.OracleService.Tests --framework net8.0 --blame-hang --blame-hang-timeout 180000 /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov  /p:MergeWith=${GITHUB_WORKSPACE}/coverage-join/coverage.json /p:CoverletOutputFormat=lcov -p:Exclude=${EXCLUDED_TESTS}
     - name: Coveralls
       uses: coverallsapp/github-action@v2.2.3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         format: lcov
-        file: ${GITHUB_WORKSPACE}/coverage/lcov.net8.0.info
+        file: ${GITHUB_WORKSPACE}/coverage/lcov.info
 
   Review:
     needs: Test
